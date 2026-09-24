@@ -1,0 +1,12 @@
+.ipynb_checkpoints/
+*.log
+__pycache__/
+isaacsim/
+push.sh
+*checkpoint*/
+*checkpoints*/
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.onnx

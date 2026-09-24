@@ -1,0 +1,19 @@
+FROM vllm/vllm-openai:latest
+
+USER root
+
+RUN python3 -m pip install --no-cache-dir \
+    transformers \
+    accelerate \
+    bitsandbytes \
+    "qwen-vl-utils[decord]" \
+    peft \
+    datasets \
+    Pillow \
+    liger-kernel
+
+RUN mkdir -p /workspace/ml-challenge
+
+WORKDIR /workspace/ml-challenge
+
+CMD ["sleep", "infinity"]
