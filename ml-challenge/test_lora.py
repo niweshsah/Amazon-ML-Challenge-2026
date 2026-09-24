@@ -2,7 +2,7 @@
 
 import torch
 from peft import PeftModel
-from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig # type: ignore
 
 # ==============================================================================
 # CONFIGURATION

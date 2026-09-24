@@ -10,3 +10,4 @@ isaacsim/
 *.bin
 *.safetensors
 *.onnxpush.sh
+push.sh

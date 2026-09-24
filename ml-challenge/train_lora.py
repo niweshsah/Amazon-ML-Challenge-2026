@@ -5,7 +5,7 @@ import json
 import torch
 from datasets import Dataset, load_dataset
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
-from transformers import (
+from transformers import ( # type: ignore
     AutoModelForCausalLM,
     AutoTokenizer,
     BitsAndBytesConfig,

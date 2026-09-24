@@ -135,7 +135,7 @@ def main():
     
     # <-- LIGER KERNEL PATCH HERE
     # AutoLigerKernelForCausalLM replaces AutoModelForCausalLM
-    ModelClass = AutoLigerKernelForCausalLM if USE_LIGER_KERNEL else AutoModelForCausalLM
+    ModelClass = AutoLigerKernelForCausalLM if USE_LIGER_KERNEL else AutoModelForCausalLM # type: ignore
     
     base_model = ModelClass.from_pretrained(
         MODEL_NAME,
