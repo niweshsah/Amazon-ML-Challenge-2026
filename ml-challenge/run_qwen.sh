@@ -10,6 +10,8 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
 HOST_ML_DIR="${SCRIPT_DIR}"
 CONTAINER_ML_DIR="/workspace/ml-challenge"
+HOST_DATASET_DIR="${SCRIPT_DIR}/../challenge-dataset"
+CONTAINER_DATASET_DIR="${CONTAINER_ML_DIR}/challenge-dataset"
 
 # --- CACHE DIRECTORY CONFIGURATION ---
 # Change these paths if you want to store caches in a specific local folder 
@@ -53,6 +55,10 @@ if ! docker image inspect "${IMAGE_NAME}" >/dev/null 2>&1; then
     echo "    ${SCRIPT_DIR}/build_qwen.sh"
     echo
     exit 1
+fi
+
+if [[ ! -d "${HOST_DATASET_DIR}" ]]; then
+    error "Dataset directory not found: ${HOST_DATASET_DIR}"
 fi
 
 # ------------------------------------------------------------
@@ -124,6 +130,7 @@ exec docker run \
     --env HF_HOME="${CONTAINER_HF_CACHE}" \
     --env TRITON_CACHE_DIR="${CONTAINER_TRITON_CACHE}" \
     --mount "type=bind,source=${HOST_ML_DIR},target=${CONTAINER_ML_DIR}" \
+    --mount "type=bind,source=${HOST_DATASET_DIR},target=${CONTAINER_DATASET_DIR},readonly" \
     --mount "type=bind,source=${HOST_HF_CACHE},target=${CONTAINER_HF_CACHE}" \
     --mount "type=bind,source=${HOST_TRITON_CACHE},target=${CONTAINER_TRITON_CACHE}" \
     --workdir "${CONTAINER_ML_DIR}" \

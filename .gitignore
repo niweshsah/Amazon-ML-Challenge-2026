@@ -10,4 +10,6 @@ isaacsim/
 *.bin
 *.safetensors
 *.onnxpush.sh
+
+challenge-dataset/
 push.sh
