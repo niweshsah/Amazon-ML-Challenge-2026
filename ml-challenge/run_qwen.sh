@@ -10,7 +10,7 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
 HOST_ML_DIR="${SCRIPT_DIR}"
 CONTAINER_ML_DIR="/workspace/ml-challenge"
-HOST_DATASET_DIR="${SCRIPT_DIR}/../challenge-dataset"
+HOST_DATASET_DIR="${SCRIPT_DIR}/business_entity_resolution/challenge-dataset"
 CONTAINER_DATASET_DIR="${CONTAINER_ML_DIR}/challenge-dataset"
 
 # --- CACHE DIRECTORY CONFIGURATION ---

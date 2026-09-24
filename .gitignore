@@ -2,7 +2,7 @@
 *.log
 __pycache__/
 isaacsim/
-# push.sh
+
 *checkpoint*/
 *checkpoints*/
 *.pt
@@ -12,4 +12,6 @@ isaacsim/
 *.onnxpush.sh
 
 challenge-dataset/
+student_resource/
+
 push.sh
