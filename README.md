@@ -25,7 +25,7 @@ cd ~/workspace/niwesh
 Run:
 
 ```bash
-./run_qwen.sh
+./ml-challenge/run_qwen.sh
 ```
 
 This will start the Docker container and open a terminal inside it.
