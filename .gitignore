@@ -2,11 +2,11 @@
 *.log
 __pycache__/
 isaacsim/
-push.sh
+# push.sh
 *checkpoint*/
 *checkpoints*/
 *.pt
 *.pth
 *.bin
 *.safetensors
-*.onnx
+*.onnxpush.sh
