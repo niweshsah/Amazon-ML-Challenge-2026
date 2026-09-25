@@ -18,13 +18,13 @@ class TextCleaner:
         return re.sub(r'\s+', ' ', text).strip()
 
 def prepare_dataframe(df: pd.DataFrame) -> pd.DataFrame:
-    df['clean_name'] = df['business_name'].apply(TextCleaner.clean)
-    df['clean_address'] = df['business_address'].apply(TextCleaner.clean)
-    df['clean_country'] = df['country'].fillna('').apply(TextCleaner.clean)
+    clean_name = df['business_name'].fillna('').apply(TextCleaner.clean)
+    clean_address = df['business_address'].fillna('').apply(TextCleaner.clean)
+    clean_country = df['country'].fillna('').apply(TextCleaner.clean)
     
     df['search_text'] = (
-        df['clean_country'] + " " + 
-        df['clean_name'] + " " + 
-        df['clean_address']
+        clean_country + " " + 
+        clean_name + " " + 
+        clean_address
     ).str.strip()
     return df

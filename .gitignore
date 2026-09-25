@@ -13,5 +13,6 @@ isaacsim/
 
 challenge-dataset/
 student_resource/
-
+*.pkl
+*.txt
 push.sh

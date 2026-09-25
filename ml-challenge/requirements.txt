@@ -9,3 +9,5 @@ torchvision
 trl
 liger-kernel
 
+# added now
+cudf-cu13 --extra-index-url https://pypi.nvidia.com

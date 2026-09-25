@@ -11,7 +11,7 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 HOST_ML_DIR="${SCRIPT_DIR}"
 CONTAINER_ML_DIR="/workspace/ml-challenge"
 HOST_DATASET_DIR="${SCRIPT_DIR}/business_entity_resolution/challenge-dataset"
-CONTAINER_DATASET_DIR="${CONTAINER_ML_DIR}/challenge-dataset"
+CONTAINER_DATASET_DIR="${CONTAINER_ML_DIR}/business_entity_resolution/challenge-dataset"
 
 # --- CACHE DIRECTORY CONFIGURATION ---
 # Change these paths if you want to store caches in a specific local folder 
@@ -124,6 +124,7 @@ exec docker run \
     --interactive \
     --tty \
     --gpus all \
+    --user root \
     --name "${CONTAINER_NAME}" \
     --env NVIDIA_VISIBLE_DEVICES=all \
     --env NVIDIA_DRIVER_CAPABILITIES=compute,utility \
