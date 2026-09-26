@@ -16,3 +16,13 @@ student_resource/
 *.pkl
 *.txt
 push.sh
+*.parquet
+*.npz
+*.npy
+*.png
+*.tsv
+*.sqlite3
+*.json
+*.index
+*.lock
+*.tmp

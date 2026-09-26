@@ -6,22 +6,41 @@ Example (from the repository root)::
     python3 ml-challenge/dataset-explore/dataset_analysis.py \
         --data-root ../student_resource/student_resource/dataset
 
-The default pass is exhaustive for counts and bounded for displayed examples. Pairwise
+    python3 ml-challenge/dataset-explore/dataset_analysis.py \
+        --data-root ../student_resource/student_resource/dataset --data-percent 1
+        
+    python3 dataset_process.py \
+  --data-root ./student_resource/dataset \
+  --data-percent 1 \
+  --backend cpu
+
+The default pass is exhaustive for counts and bounded for displayed examples. Use
+--data-percent 1 to profile approximately 1% while preserving known match links. Pairwise
 similarity experiments require --expensive-analysis. No network access is used.
+Matching completed runs are reused. A completed SQLite index is retained under the
+output directory so report-only option changes avoid rereading source TSVs. Interrupted
+runs resume after their last committed chunk; --force rebuilds the index and report.
+GPU mode accelerates only batched string lengths; other analysis remains on CPU.
 """
 
 from __future__ import annotations
 
 import argparse
 from collections import Counter, defaultdict
+from contextlib import contextmanager
 import csv
 from dataclasses import asdict, dataclass, field
+from datetime import datetime, timezone
+import fcntl
+import hashlib
 import json
 import logging
 import math
 import mmap
+import os
 from pathlib import Path
 import re
+import shutil
 import sqlite3
 import sys
 import tempfile
@@ -33,6 +52,8 @@ import pandas as pd
 
 
 LOG = logging.getLogger("dataset_analysis")
+CACHE_SCHEMA_VERSION = 1  # Bump when ingestion output or SQLite layout changes.
+SAMPLING_POLICY_VERSION = 1
 FIELDS = ("business_name", "business_address")
 SOURCE_COLUMNS = ("entity_id", "business_name", "business_address", "country")
 TRUTH_COLUMNS = ("source1_entity_id", "matched_entity_ids")
@@ -56,6 +77,7 @@ class AnalysisConfig:
     backend: str = "auto"
     chunk_size: int = 20_000
     sample_size: int = 5_000
+    data_percent: float = 100.0
     random_seed: int = 42
     top_k_words: int = 100
     top_k_values: int = 50
@@ -77,6 +99,7 @@ class AnalysisConfig:
     prefix_length: int = 4
     plots: bool = True
     expensive_analysis: bool = False
+    force: bool = False
 
 
 @dataclass
@@ -99,9 +122,13 @@ def parse_args() -> AnalysisConfig:
                         help="Directory containing train/ and test/ directories")
     parser.add_argument("--output-dir", type=Path,
                         default=Path(__file__).resolve().parent / "analysis_output")
-    parser.add_argument("--backend", choices=("auto", "gpu", "cpu"), default="auto")
+    parser.add_argument("--backend", choices=("auto", "gpu", "cpu"), default="auto",
+                        help="GPU accelerates batched string lengths only; other analysis uses CPU")
     parser.add_argument("--chunk-size", type=int, default=20_000)
     parser.add_argument("--sample-size", type=int, default=5_000)
+    parser.add_argument("--data-percent", type=float, default=100.0,
+                        help="Approximate percentage of records to profile (0 < percent <= 100); "
+                             "training matches to sampled Source 1 records are always included")
     parser.add_argument("--random-seed", type=int, default=42)
     parser.add_argument("--top-k-words", type=int, default=100)
     parser.add_argument("--top-k-values", type=int, default=50)
@@ -124,6 +151,8 @@ def parse_args() -> AnalysisConfig:
     parser.add_argument("--prefix-length", type=int, default=4)
     parser.add_argument("--no-plots", action="store_true")
     parser.add_argument("--expensive-analysis", action="store_true")
+    parser.add_argument("--force", action="store_true",
+                        help="Rebuild the SQLite index and report, ignoring saved work")
     args = parser.parse_args()
     for name in ("chunk_size", "sample_size", "top_k_words", "top_k_values",
                  "min_token_length", "min_skew_df", "skew_candidate_multiplier",
@@ -139,11 +168,14 @@ def parse_args() -> AnalysisConfig:
         parser.error("--similarity-threshold must be in [0, 1]")
     if not 0 <= args.punctuation_ratio <= 1:
         parser.error("--punctuation-ratio must be in [0, 1]")
+    if not math.isfinite(args.data_percent) or not 0 < args.data_percent <= 100:
+        parser.error("--data-percent must be greater than 0 and at most 100")
     return AnalysisConfig(
         data_root=args.data_root.expanduser().resolve(),
         output_dir=args.output_dir.expanduser().resolve(),
         backend=args.backend, chunk_size=args.chunk_size,
-        sample_size=args.sample_size, random_seed=args.random_seed,
+        sample_size=args.sample_size, data_percent=args.data_percent,
+        random_seed=args.random_seed,
         top_k_words=args.top_k_words, top_k_values=args.top_k_values,
         tokenizer=args.tokenizer,
         min_token_length=args.min_token_length, min_skew_df=args.min_skew_df,
@@ -158,6 +190,7 @@ def parse_args() -> AnalysisConfig:
         nonmatch_sample_limit=args.nonmatch_sample_limit,
         prefix_length=args.prefix_length, plots=not args.no_plots,
         expensive_analysis=args.expensive_analysis,
+        force=args.force,
     )
 
 
@@ -287,6 +320,241 @@ def format_number(value: Any) -> Any:
     return value
 
 
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for block in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def run_signature(config: AnalysisConfig, files: dict[tuple[str, str], Path],
+                  backend: "Backend") -> str:
+    """Cheap input identity: file metadata, options, actual backend, and script hash."""
+    options = asdict(config)
+    options.pop("force")
+    payload = {
+        "options": {key: str(value) if isinstance(value, Path) else value
+                    for key, value in options.items()},
+        "backend": backend.name,
+        "script_sha256": sha256_file(Path(__file__).resolve()),
+        "inputs": [{"path": str(path), "size": path.stat().st_size,
+                    "mtime_ns": path.stat().st_mtime_ns}
+                   for path in files.values()],
+    }
+    return hashlib.sha256(json.dumps(payload, sort_keys=True).encode("utf-8")).hexdigest()
+
+
+def ingestion_signature(config: AnalysisConfig, files: dict[tuple[str, str], Path],
+                        backend: "Backend") -> str:
+    """Identify the reusable record index independently of report-only options."""
+    ingested_options = ("chunk_size", "random_seed", "tokenizer", "min_token_length",
+                        "ngram_max", "short_length", "long_length",
+                        "punctuation_ratio", "example_rows")
+    payload = {
+        "cache_schema_version": CACHE_SCHEMA_VERSION,
+        "options": {name: getattr(config, name) for name in ingested_options},
+        "backend": backend.name,
+        "inputs": [{"path": str(path), "size": path.stat().st_size,
+                    "mtime_ns": path.stat().st_mtime_ns}
+                   for path in files.values()],
+    }
+    if config.data_percent != 100:
+        payload["sampling"] = {"percent": config.data_percent,
+                               "policy_version": SAMPLING_POLICY_VERSION}
+    return hashlib.sha256(json.dumps(payload, sort_keys=True).encode("utf-8")).hexdigest()
+
+
+def selected_id(entity_id: str, split: str, source: str,
+                config: AnalysisConfig) -> bool:
+    """Stable Bernoulli sample by ID, independent of row order and chunk size."""
+    if config.data_percent == 100:
+        return True
+    key = f"{config.random_seed}\0{split}\0{source}\0{entity_id}".encode("utf-8")
+    value = int.from_bytes(hashlib.blake2b(key, digest_size=8).digest(), "big")
+    return value < config.data_percent / 100 * 2**64
+
+
+def sampled_match_ids(path: Path, config: AnalysisConfig) -> dict[str, set[str]]:
+    """Read training truth once to retain every link for selected S1 IDs."""
+    linked: dict[str, set[str]] = {"source2": set(), "source3": set()}
+    if config.data_percent == 100:
+        return linked
+    for frame in chunks(path, config):
+        for s1, matches in frame.itertuples(index=False, name=None):
+            if not selected_id(safe_text(s1), "train", "source1", config):
+                continue
+            for match_id in safe_text(matches).split(","):
+                match_id = match_id.strip()
+                if match_id.startswith("S2-"):
+                    linked["source2"].add(match_id)
+                elif match_id.startswith("S3-"):
+                    linked["source3"].add(match_id)
+    return linked
+
+
+def sampled_frame(frame: pd.DataFrame, split: str, source: str,
+                  config: AnalysisConfig, linked: dict[str, set[str]] | None = None) -> pd.DataFrame:
+    """Select background IDs and all training records linked to sampled S1."""
+    if config.data_percent == 100:
+        return frame
+    ids = frame["source1_entity_id" if source == "ground_truth" else "entity_id"]
+    selection_source = "source1" if source == "ground_truth" else source
+    mask = [selected_id(safe_text(value), split, selection_source, config) for value in ids]
+    if split == "train" and source in ("source2", "source3") and linked:
+        mask = [keep or safe_text(value) in linked[source]
+                for keep, value in zip(mask, ids)]
+    return frame.loc[mask]
+
+
+@contextmanager
+def output_lock(directory: Path) -> Iterator[None]:
+    """Prevent simultaneous writers to the same analysis directory (Linux/POSIX)."""
+    with (directory / ".dataset_analysis.lock").open("a+") as handle:
+        try:
+            fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as exc:
+            raise RuntimeError(f"Another analysis is using {directory}") from exc
+        try:
+            yield
+        finally:
+            fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+
+
+def valid_manifest(directory: Path) -> dict[str, Any] | None:
+    manifest_path = directory / "analysis_manifest.json"
+    if not manifest_path.is_file():
+        return None
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        for relative, expected_hash in manifest["outputs"].items():
+            target = (directory / relative).resolve()
+            if directory.resolve() not in target.parents or not target.is_file():
+                return None
+            if sha256_file(target) != expected_hash:
+                return None
+        return manifest if manifest["outputs"] else None
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+
+
+def completed_run_valid(directory: Path, signature: str) -> bool:
+    manifest = valid_manifest(directory)
+    return manifest is not None and manifest.get("signature") == signature
+
+
+def recover_previous_output(directory: Path) -> None:
+    """Restore an earlier complete report after an interrupted publication."""
+    backup = directory / ".analysis_previous_complete"
+    if not backup.exists():
+        return
+    if valid_manifest(directory) is not None:
+        shutil.rmtree(backup)
+        return
+    manifest = valid_manifest(backup)
+    if manifest is None:
+        raise RuntimeError(f"Previous-report backup is damaged: {backup}")
+    for relative in manifest["outputs"]:
+        source = backup / relative
+        target = directory / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        temporary = target.with_name(f".{target.name}.restore")
+        shutil.copy2(source, temporary)
+        os.replace(temporary, target)
+    temporary_manifest = directory / ".analysis_manifest.restore"
+    shutil.copy2(backup / "analysis_manifest.json", temporary_manifest)
+    os.replace(temporary_manifest, directory / "analysis_manifest.json")
+    shutil.rmtree(backup)
+
+
+def back_up_previous_output(directory: Path) -> Path | None:
+    manifest = valid_manifest(directory)
+    if manifest is None:
+        return None
+    backup = directory / ".analysis_previous_complete"
+    backup.mkdir()
+    for relative in manifest["outputs"]:
+        source = directory / relative
+        target = backup / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            os.link(source, target)
+        except OSError:
+            shutil.copy2(source, target)
+    shutil.copy2(directory / "analysis_manifest.json", backup / "analysis_manifest.json")
+    return backup
+
+
+def encode_counter(counter: Counter[Any]) -> list[list[Any]]:
+    return [[list(key) if isinstance(key, tuple) else key, value]
+            for key, value in counter.items()]
+
+
+def decode_counter(data: list[list[Any]]) -> Counter[Any]:
+    return Counter({tuple(key) if isinstance(key, list) else key: value
+                    for key, value in data})
+
+
+def encode_stats(stats: dict[tuple[str, ...], "Stats"]) -> list[list[Any]]:
+    return [[list(key), {"hist": list(value.hist.items()), "count": value.count,
+                         "total": value.total, "total_sq": value.total_sq}]
+            for key, value in stats.items()]
+
+
+def decode_stats(data: list[list[Any]]) -> dict[tuple[str, ...], "Stats"]:
+    result: dict[tuple[str, ...], Stats] = defaultdict(Stats)
+    for key, payload in data:
+        item = Stats()
+        item.hist = Counter({int(number): amount for number, amount in payload["hist"]})
+        item.count = payload["count"]
+        item.total = payload["total"]
+        item.total_sq = payload["total_sq"]
+        result[tuple(key)] = item
+    return result
+
+
+class Checkpoint:
+    """Store one JSON snapshot in the same transaction as each processed chunk."""
+
+    def __init__(self, db: sqlite3.Connection, signature: str,
+                 read_only: bool = False) -> None:
+        self.db = db
+        if not read_only:
+            db.execute("CREATE TABLE IF NOT EXISTS checkpoint (id INTEGER PRIMARY KEY, signature TEXT, payload TEXT)")
+        row = db.execute("SELECT signature, payload FROM checkpoint WHERE id=1").fetchone()
+        if row is not None and row[0] != signature:
+            if read_only:
+                raise ValueError("Input data or ingestion settings changed")
+            raise ValueError("Existing checkpoint belongs to different input data or ingestion settings; use --force")
+        try:
+            self.state = json.loads(row[1]) if row else {"sources": {"completed": []}, "truth": {}}
+        except (ValueError, TypeError) as exc:
+            raise ValueError("Checkpoint is damaged; use --force to start fresh") from exc
+        self.state["signature"] = signature
+        self.restored_output = self.state.pop("output", None)
+        if row is None:
+            if read_only:
+                raise ValueError("Completed cache has no checkpoint")
+            self.commit(Output())
+
+    def commit(self, output: Output) -> None:
+        payload = dict(self.state)
+        payload["output"] = {"tables": output.tables, "summary": output.summary,
+                             "warnings": output.warnings}
+        self.db.execute("""INSERT INTO checkpoint (id, signature, payload) VALUES (1, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET signature=excluded.signature,
+            payload=excluded.payload""", (self.state["signature"], json.dumps(
+                payload, ensure_ascii=False, default=format_number)))
+        self.db.commit()
+
+    def output(self) -> Output:
+        if self.restored_output is None:
+            return Output()
+        return Output(tables=self.restored_output["tables"],
+                      summary=self.restored_output["summary"],
+                      warnings=self.restored_output["warnings"])
+
+
 class Stats:
     """Exact bounded-cardinality length histogram with mergeable moments."""
 
@@ -331,26 +599,26 @@ class Stats:
 
 def make_index(path: Path) -> sqlite3.Connection:
     db = sqlite3.connect(path)
-    db.execute("PRAGMA journal_mode=OFF")
-    db.execute("PRAGMA synchronous=OFF")
+    db.execute("PRAGMA journal_mode=WAL")
+    db.execute("PRAGMA synchronous=FULL")
     db.execute("PRAGMA temp_store=FILE")
     db.executescript("""
-        CREATE TABLE records (
+        CREATE TABLE IF NOT EXISTS records (
             split TEXT NOT NULL, source TEXT NOT NULL, entity_id TEXT NOT NULL,
             business_name TEXT NOT NULL, business_address TEXT NOT NULL,
             country TEXT NOT NULL, norm_name TEXT NOT NULL, norm_address TEXT NOT NULL,
             sorted_name TEXT NOT NULL, sorted_address TEXT NOT NULL
         );
-        CREATE TABLE truth (
+        CREATE TABLE IF NOT EXISTS truth (
             source1_entity_id TEXT NOT NULL, matched_entity_id TEXT NOT NULL,
             source TEXT NOT NULL
         );
-        CREATE TABLE truth_rows (
+        CREATE TABLE IF NOT EXISTS truth_rows (
             source1_entity_id TEXT NOT NULL, match_count INTEGER NOT NULL,
             source2_count INTEGER NOT NULL, source3_count INTEGER NOT NULL,
             matched_entity_ids TEXT NOT NULL
         );
-        CREATE TABLE token_counts (
+        CREATE TABLE IF NOT EXISTS token_counts (
             split TEXT NOT NULL, source TEXT NOT NULL, country TEXT NOT NULL,
             field TEXT NOT NULL, n INTEGER NOT NULL, token TEXT NOT NULL,
             frequency INTEGER NOT NULL, document_frequency INTEGER NOT NULL,
@@ -362,14 +630,87 @@ def make_index(path: Path) -> sqlite3.Connection:
 
 def index_records(db: sqlite3.Connection) -> None:
     db.executescript("""
-        CREATE INDEX records_id ON records(split, entity_id);
-        CREATE INDEX records_name ON records(split, norm_name);
-        CREATE INDEX records_address ON records(split, norm_address);
-        CREATE INDEX truth_s1 ON truth(source1_entity_id);
-        CREATE INDEX truth_match ON truth(matched_entity_id);
-        CREATE INDEX truth_rows_s1 ON truth_rows(source1_entity_id);
-        CREATE INDEX token_by_value ON token_counts(field, n, token, split);
+        CREATE INDEX IF NOT EXISTS records_id ON records(split, entity_id);
+        CREATE INDEX IF NOT EXISTS records_name ON records(split, norm_name);
+        CREATE INDEX IF NOT EXISTS records_address ON records(split, norm_address);
+        CREATE INDEX IF NOT EXISTS truth_s1 ON truth(source1_entity_id);
+        CREATE INDEX IF NOT EXISTS truth_match ON truth(matched_entity_id);
+        CREATE INDEX IF NOT EXISTS truth_rows_s1 ON truth_rows(source1_entity_id);
+        CREATE INDEX IF NOT EXISTS token_by_value ON token_counts(field, n, token, split);
     """)
+
+
+def ingestion_complete(checkpoint: Checkpoint) -> bool:
+    """A cache is reusable only after all source files and truth were committed."""
+    expected = {f"{split}/{source}" for split in ("train", "test") for source in SOURCES}
+    sources = checkpoint.state.get("sources", {})
+    return (set(sources.get("completed", [])) == expected
+            and not sources.get("current")
+            and checkpoint.state.get("truth", {}).get("complete") is True
+            and checkpoint.restored_output is not None)
+
+
+def open_reusable_cache(path: Path, signature: str) -> tuple[sqlite3.Connection, Checkpoint] | None:
+    """Open a matching completed index without modifying it."""
+    if not path.is_file():
+        return None
+    db: sqlite3.Connection | None = None
+    try:
+        db = sqlite3.connect(f"{path.as_uri()}?mode=ro", uri=True)
+        row = db.execute("SELECT signature FROM checkpoint WHERE id=1").fetchone()
+        if row is not None and row[0] != signature:
+            LOG.info("Input data or ingestion settings changed; rebuilding SQLite index")
+            db.close()
+            return None
+        checkpoint = Checkpoint(db, signature, read_only=True)
+        if not ingestion_complete(checkpoint):
+            raise ValueError("Completed cache has incomplete ingestion")
+        for table in ("records", "truth", "truth_rows", "token_counts"):
+            db.execute(f"SELECT 1 FROM {table} LIMIT 1").fetchone()
+        expected_indexes = {"records_id", "records_name", "records_address",
+                            "truth_s1", "truth_match", "truth_rows_s1", "token_by_value"}
+        actual_indexes = {row[0] for row in db.execute(
+            "SELECT name FROM sqlite_master WHERE type='index'")}
+        if not expected_indexes <= actual_indexes:
+            raise ValueError("Completed cache is missing record indexes")
+        return db, checkpoint
+    except (sqlite3.Error, ValueError, KeyError, TypeError) as exc:
+        LOG.warning("Cannot reuse SQLite cache %s: %s", path, exc)
+        if db is not None:
+            db.close()
+        return None
+
+
+def recover_previous_cache(directory: Path) -> None:
+    """Finish or undo a cache replacement interrupted between directory renames."""
+    backups = [directory / ".dataset_analysis_cache_previous"]
+    sampled_root = directory / ".dataset_analysis_caches"
+    if sampled_root.is_dir():
+        backups.extend(sampled_root.glob("*_previous"))
+    for backup in backups:
+        if not backup.exists():
+            continue
+        cache = backup.with_name(backup.name.removesuffix("_previous"))
+        if cache.exists():
+            shutil.rmtree(backup)
+        else:
+            os.replace(backup, cache)
+
+
+def publish_cache(state: Path, cache: Path) -> None:
+    """Retain completed ingestion, keeping the previous cache until replacement."""
+    cache.parent.mkdir(parents=True, exist_ok=True)
+    backup = cache.with_name(f"{cache.name}_previous")
+    if cache.exists():
+        os.replace(cache, backup)
+    try:
+        os.replace(state, cache)
+    except Exception:
+        if backup.exists():
+            os.replace(backup, cache)
+        raise
+    if backup.exists():
+        shutil.rmtree(backup)
 
 
 def issue(out: Output, split: str, source: str, kind: str,
@@ -395,27 +736,53 @@ def sample_add(bucket: list[Any], item: Any, seen: int,
 
 
 def profile_sources(files: dict[tuple[str, str], Path], config: AnalysisConfig,
-                    backend: Backend, db: sqlite3.Connection, out: Output) -> None:
-    rng = np.random.default_rng(config.random_seed)
-    length_stats: dict[tuple[str, str, str, str, str], Stats] = defaultdict(Stats)
-    missing_counts: Counter[tuple[str, str, str, str]] = Counter()
-    country_counts: Counter[tuple[str, str, str]] = Counter()
-    char_counts: Counter[tuple[str, str, str, str]] = Counter()
-    variant_counts: Counter[tuple[str, str, str, str]] = Counter()
-
+                    backend: Backend, db: sqlite3.Connection, out: Output,
+                    checkpoint: Checkpoint,
+                    linked: dict[str, set[str]] | None = None) -> None:
+    source_state = checkpoint.state["sources"]
     for split in ("train", "test"):
         for source in SOURCES:
+            file_key = f"{split}/{source}"
+            if file_key in source_state["completed"]:
+                LOG.info("Skipping completed %s", file_key)
+                continue
+            current = source_state.get("current")
+            if current is not None and current["key"] != file_key:
+                raise RuntimeError(f"Checkpoint expects {current['key']}, not {file_key}")
+            file_number = (0 if split == "train" else 3) + SOURCES.index(source)
+            rng = np.random.default_rng(config.random_seed + file_number)
+            if current is not None:
+                rng.bit_generator.state = current["rng_state"]
+            length_stats: dict[tuple[str, ...], Stats] = (
+                decode_stats(current["length_stats"]) if current else defaultdict(Stats))
+            missing_counts: Counter[tuple[str, ...]] = (
+                decode_counter(current["missing_counts"]) if current else Counter())
+            country_counts: Counter[tuple[str, ...]] = (
+                decode_counter(current["country_counts"]) if current else Counter())
+            char_counts: Counter[tuple[str, ...]] = (
+                decode_counter(current["char_counts"]) if current else Counter())
+            variant_counts: Counter[tuple[str, ...]] = (
+                decode_counter(current["variant_counts"]) if current else Counter())
             path = files[(split, source)]
             LOG.info("Profiling %s", path)
-            if contains_null_byte(path):
+            if current is None and contains_null_byte(path):
                 issue(out, split, source, "null_byte_in_file", str(path))
-            row_count = 0
-            memory_bytes = 0
-            empty: Counter[str] = Counter()
-            whitespace: Counter[str] = Counter()
-            nulls: Counter[str] = Counter()
-            examples: list[dict[str, Any]] = []
-            for frame in chunks(path, config):
+            row_count = current["row_count"] if current else 0
+            input_row_count = current.get("input_row_count", row_count) if current else 0
+            memory_bytes = current["memory_bytes"] if current else 0
+            empty: Counter[str] = Counter(current["empty"]) if current else Counter()
+            whitespace: Counter[str] = Counter(current["whitespace"]) if current else Counter()
+            nulls: Counter[str] = Counter(current["nulls"]) if current else Counter()
+            examples: list[dict[str, Any]] = current["examples"] if current else []
+            next_chunk = current["next_chunk"] if current else 0
+            if next_chunk:
+                LOG.info("Resuming %s after %s chunks (%s rows)",
+                         path.name, f"{next_chunk:,}", f"{row_count:,}")
+            for chunk_number, frame in enumerate(chunks(path, config)):
+                if chunk_number < next_chunk:
+                    continue
+                input_row_count += len(frame)
+                frame = sampled_frame(frame, split, source, config, linked)
                 memory_bytes += int(frame.memory_usage(index=False, deep=True).sum())
                 for column in SOURCE_COLUMNS:
                     nulls[column] += int(frame[column].isna().sum())
@@ -531,11 +898,27 @@ def profile_sources(files: dict[tuple[str, str], Path], config: AnalysisConfig,
                     frequency=frequency+excluded.frequency,
                     document_frequency=document_frequency+excluded.document_frequency""",
                     ((*key, frequency, token_doc[key]) for key, frequency in token_acc.items()))
-                db.commit()
+                source_state["current"] = {
+                    "key": file_key, "next_chunk": chunk_number + 1,
+                    "row_count": row_count, "input_row_count": input_row_count,
+                    "memory_bytes": memory_bytes,
+                    "empty": dict(empty), "whitespace": dict(whitespace),
+                    "nulls": dict(nulls), "examples": examples,
+                    "rng_state": rng.bit_generator.state,
+                    "length_stats": encode_stats(length_stats),
+                    "missing_counts": encode_counter(missing_counts),
+                    "country_counts": encode_counter(country_counts),
+                    "char_counts": encode_counter(char_counts),
+                    "variant_counts": encode_counter(variant_counts),
+                }
+                checkpoint.state["backend_effective"] = backend.name
+                checkpoint.commit(out)
                 LOG.info("%s: %s rows", path.name, f"{row_count:,}")
             out.add("dataset_summary", {"split": split, "source": source,
                                         "path": str(path), "file_size_bytes": path.stat().st_size,
-                                        "rows": row_count, "columns": len(SOURCE_COLUMNS),
+                                        "rows": row_count, "input_rows": input_row_count,
+                                        "sample_percent_actual": 100 * row_count / max(1, input_row_count),
+                                        "columns": len(SOURCE_COLUMNS),
                                         "column_names": ",".join(SOURCE_COLUMNS),
                                         "approx_memory_bytes": memory_bytes})
             for column in SOURCE_COLUMNS:
@@ -550,45 +933,64 @@ def profile_sources(files: dict[tuple[str, str], Path], config: AnalysisConfig,
                                            "missing_percent": 100 * (nulls[column] + empty[column] +
                                                                      whitespace[column]) / max(1, row_count)})
             out.tables.setdefault("example_rows", []).extend(examples)
-
-    for (split, source, country, combination), count in sorted(missing_counts.items()):
-        denominator = sum(v for (s, src, c, _), v in missing_counts.items()
-                          if (s, src, c) == (split, source, country))
-        out.add("missing_values", {"split": split, "source": source, "country": country,
-                                   "combination": combination, "rows": count,
-                                   "percent": 100 * count / denominator})
-    for (split, source, country), count in sorted(country_counts.items()):
-        out.add("country_summary", {"split": split, "source": source,
-                                    "country": country, "rows": count})
-    for (split, source, country, field_name, measure), stats in sorted(length_stats.items()):
-        out.add("string_statistics", {"split": split, "source": source,
-                                      "country": country, "field": field_name,
-                                      "measure": measure, **stats.row()})
-    for (split, source, field_name, pattern), count in sorted(char_counts.items()):
-        out.add("character_patterns", {"split": split, "source": source,
-                                       "field": field_name, "pattern": pattern, "count": count})
-    for (split, source, field_name, variant), count in sorted(variant_counts.items()):
-        out.add("normalization_patterns", {"split": split, "source": source,
-                                           "field": field_name, "variant": variant, "count": count})
+            for (s, src, country, combination), count in sorted(missing_counts.items()):
+                denominator = sum(value for (a, b, c, _), value in missing_counts.items()
+                                  if (a, b, c) == (s, src, country))
+                out.add("missing_values", {"split": s, "source": src, "country": country,
+                                           "combination": combination, "rows": count,
+                                           "percent": 100 * count / denominator})
+            for (s, src, country), count in sorted(country_counts.items()):
+                out.add("country_summary", {"split": s, "source": src,
+                                            "country": country, "rows": count})
+            for (s, src, country, field_name, measure), stats in sorted(length_stats.items()):
+                out.add("string_statistics", {"split": s, "source": src,
+                                              "country": country, "field": field_name,
+                                              "measure": measure, **stats.row()})
+            for (s, src, field_name, pattern), count in sorted(char_counts.items()):
+                out.add("character_patterns", {"split": s, "source": src,
+                                               "field": field_name, "pattern": pattern,
+                                               "count": count})
+            for (s, src, field_name, variant), count in sorted(variant_counts.items()):
+                out.add("normalization_patterns", {"split": s, "source": src,
+                                                   "field": field_name, "variant": variant,
+                                                   "count": count})
+            source_state["completed"].append(file_key)
+            source_state.pop("current", None)
+            checkpoint.commit(out)
 
 
 def profile_ground_truth(path: Path, config: AnalysisConfig,
-                         db: sqlite3.Connection, out: Output) -> None:
+                         db: sqlite3.Connection, out: Output,
+                         checkpoint: Checkpoint) -> None:
+    truth_state = checkpoint.state["truth"]
+    if truth_state.get("complete"):
+        LOG.info("Skipping completed ground truth")
+        return
+    current = truth_state.get("current")
     LOG.info("Profiling %s", path)
-    if contains_null_byte(path):
+    if current is None and contains_null_byte(path):
         issue(out, "train", "ground_truth", "null_byte_in_file", str(path))
-    rows = 0
-    pairs = 0
-    counts: Counter[int] = Counter()
-    s2_counts: Counter[int] = Counter()
-    s3_counts: Counter[int] = Counter()
-    source_patterns: Counter[str] = Counter()
-    examples: dict[str, list[str]] = defaultdict(list)
-    empty: Counter[str] = Counter()
-    whitespace: Counter[str] = Counter()
-    nulls: Counter[str] = Counter()
-    memory_bytes = 0
-    for frame in chunks(path, config):
+    rows = current["rows"] if current else 0
+    input_rows = current.get("input_rows", rows) if current else 0
+    pairs = current["pairs"] if current else 0
+    counts: Counter[int] = decode_counter(current["counts"]) if current else Counter()
+    s2_counts: Counter[int] = decode_counter(current["s2_counts"]) if current else Counter()
+    s3_counts: Counter[int] = decode_counter(current["s3_counts"]) if current else Counter()
+    source_patterns: Counter[str] = decode_counter(current["source_patterns"]) if current else Counter()
+    examples: dict[str, list[str]] = defaultdict(list, current["examples"] if current else {})
+    empty: Counter[str] = Counter(current["empty"]) if current else Counter()
+    whitespace: Counter[str] = Counter(current["whitespace"]) if current else Counter()
+    nulls: Counter[str] = Counter(current["nulls"]) if current else Counter()
+    memory_bytes = current["memory_bytes"] if current else 0
+    next_chunk = current["next_chunk"] if current else 0
+    if next_chunk:
+        LOG.info("Resuming ground truth after %s chunks (%s rows)",
+                 f"{next_chunk:,}", f"{rows:,}")
+    for chunk_number, frame in enumerate(chunks(path, config)):
+        if chunk_number < next_chunk:
+            continue
+        input_rows += len(frame)
+        frame = sampled_frame(frame, "train", "ground_truth", config)
         memory_bytes += int(frame.memory_usage(index=False, deep=True).sum())
         for column in TRUTH_COLUMNS:
             nulls[column] += int(frame[column].isna().sum())
@@ -632,11 +1034,24 @@ def profile_ground_truth(path: Path, config: AnalysisConfig,
             source_patterns[pattern] += 1
         db.executemany("INSERT INTO truth_rows VALUES (?,?,?,?,?)", truth_rows)
         db.executemany("INSERT INTO truth VALUES (?,?,?)", pair_rows)
-        db.commit()
+        truth_state["current"] = {
+            "next_chunk": chunk_number + 1, "rows": rows,
+            "input_rows": input_rows, "pairs": pairs,
+            "counts": encode_counter(counts),
+            "s2_counts": encode_counter(s2_counts),
+            "s3_counts": encode_counter(s3_counts),
+            "source_patterns": encode_counter(source_patterns),
+            "examples": dict(examples), "empty": dict(empty),
+            "whitespace": dict(whitespace), "nulls": dict(nulls),
+            "memory_bytes": memory_bytes,
+        }
+        checkpoint.commit(out)
         LOG.info("%s: %s rows", path.name, f"{rows:,}")
     out.add("dataset_summary", {"split": "train", "source": "ground_truth",
                                 "path": str(path), "file_size_bytes": path.stat().st_size,
-                                "rows": rows, "columns": 2,
+                                "rows": rows, "input_rows": input_rows,
+                                "sample_percent_actual": 100 * rows / max(1, input_rows),
+                                "columns": 2,
                                 "column_names": ",".join(TRUTH_COLUMNS),
                                 "approx_memory_bytes": memory_bytes})
     for column in TRUTH_COLUMNS:
@@ -661,11 +1076,15 @@ def profile_ground_truth(path: Path, config: AnalysisConfig,
         out.add("ground_truth_summary", {"measure": "source_pattern",
                                          "category": category, "count": count})
     for name, value in (("source1_rows", rows), ("match_pairs", pairs),
-                        ("singletons", counts[0]), ("singleton_percent", 100 * counts[0] / max(1, rows)),
+                        ("singletons", counts[0]),
+                        ("singleton_percent", 100 * counts[0] / rows if rows else None),
                         ("one_match", counts[1]),
                         ("multiple_matches", sum(v for k, v in counts.items() if k > 1)),
                         ("max_matches", max(counts, default=0))):
         out.add("ground_truth_summary", {"measure": name, "category": "all", "count": value})
+    truth_state["complete"] = True
+    truth_state.pop("current", None)
+    checkpoint.commit(out)
 
 
 def query_one(db: sqlite3.Connection, sql: str, params: tuple[Any, ...] = ()) -> Any:
@@ -908,7 +1327,7 @@ def export_tokens(db: sqlite3.Connection, config: AnalysisConfig, out: Output) -
                                    if r["split"] == split and r["source"] == source)
                 groups = [(source, "all", source_rows)]
                 groups.extend((source, r["country"], r["rows"])
-                              for r in out.tables["country_summary"]
+                              for r in out.tables.get("country_summary", [])
                               if r["split"] == split and r["source"] == source)
                 for group_source, country, group_rows in groups:
                     country_clause = "" if country == "all" else "AND country=?"
@@ -1382,7 +1801,8 @@ def markdown_table(rows: list[dict[str, Any]], columns: list[str], limit: int = 
     return "\n".join(lines)
 
 
-def write_report(out: Output, config: AnalysisConfig, backend: Backend) -> None:
+def write_report(out: Output, config: AnalysisConfig, backend: Backend,
+                 directory: Path) -> None:
     summary = out.tables.get("dataset_summary", [])
     source_summary = [row for row in summary if row["source"] != "ground_truth"]
     truth = out.tables.get("ground_truth_summary", [])
@@ -1403,11 +1823,19 @@ def write_report(out: Output, config: AnalysisConfig, backend: Backend) -> None:
     lines = [
         "# Business Entity Resolution Dataset Analysis", "",
         f"Dataset root: `{config.data_root}`. Backend: `{backend.name}`.",
-        "Counts and inventories use all rows. Displayed examples are bounded reservoirs; "
-        "the optional similarity and blocking estimates use sampled training pairs.", "",
+        "GPU mode covers batched string-length calculations only; TSV parsing, Unicode "
+        "tokenization, joins, duplicate checks, and reporting use CPU/SQLite.", "",
+        (f"Requested data percentage: {config.data_percent:g}%. Counts describe only the "
+         "analyzed records. Training Source 1 IDs are sampled by a stable seeded hash; "
+         "all their known Source 2/3 matches and sampled background records are included. "
+         "Test sources are sampled independently. Actual per-file percentages may differ."
+         if config.data_percent != 100 else "Counts and inventories use all input rows."),
+        "Displayed examples are bounded reservoirs; optional similarity and blocking "
+        "estimates use sampled training pairs. Percentage selection still reads the TSVs "
+        "and does not estimate full-dataset totals.", "",
         "## Dataset inventory", "",
-        markdown_table(source_summary, ["split", "source", "rows", "file_size_bytes",
-                                        "approx_memory_bytes"]), "",
+        markdown_table(source_summary, ["split", "source", "input_rows", "rows",
+                                        "sample_percent_actual", "file_size_bytes"]), "",
         "Detailed file and column profiles: `dataset_summary.tsv`, `column_summary.tsv`, "
         "and `common_values.tsv`.", "",
         "## Missingness and text", "",
@@ -1436,7 +1864,10 @@ def write_report(out: Output, config: AnalysisConfig, backend: Backend) -> None:
         "choosing normalization or blocking rules.", "",
         "## Duplicates, blocking, and train/test shift", "",
         markdown_table(duplicate, ["split", "source", "type", "groups", "extra_records"]), "",
-        f"Countries present in test and absent in train: {', '.join(unseen) if unseen else 'none found'}.",
+        ("Countries seen only in the analyzed test subset" if config.data_percent != 100
+         else "Countries present in test and absent in train") +
+        f": {', '.join(unseen) if unseen else 'none found'}." +
+        (" Sampling can create apparent country shifts." if config.data_percent != 100 else ""),
         "See `duplicate_summary.tsv`, `suspicious_duplicates.tsv`, "
         "`train_test_comparison.tsv`, and `data_quality_issues.tsv`.", "",
     ]
@@ -1461,7 +1892,40 @@ def write_report(out: Output, config: AnalysisConfig, backend: Backend) -> None:
                   "and are not guaranteed negatives. Empty and whitespace-only fields "
                   "are reported separately; literal 'NA' is preserved as text. "
                   "No external data was consulted.", ""])
-    (config.output_dir / "report.md").write_text("\n".join(lines), encoding="utf-8")
+    (directory / "report.md").write_text("\n".join(lines), encoding="utf-8")
+
+
+def publish_outputs(staging: Path, directory: Path, signature: str) -> None:
+    """Publish finished artifacts, then atomically mark the run complete."""
+    previous = directory / "analysis_manifest.json"
+    backup = back_up_previous_output(directory)
+    old_outputs: set[str] = set()
+    if backup is not None:
+        old_manifest = json.loads((backup / "analysis_manifest.json").read_text(
+            encoding="utf-8"))
+        old_outputs = set(old_manifest["outputs"])
+    hashes: dict[str, str] = {}
+    try:
+        for source in sorted(path for path in staging.rglob("*") if path.is_file()):
+            relative = source.relative_to(staging)
+            hashes[relative.as_posix()] = sha256_file(source)
+            destination = directory / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            os.replace(source, destination)
+        for relative in old_outputs - set(hashes):
+            (directory / relative).unlink()
+        manifest = {"signature": signature,
+                    "completed_at_utc": datetime.now(timezone.utc).isoformat(),
+                    "outputs": hashes}
+        temporary_manifest = directory / ".analysis_manifest.tmp"
+        temporary_manifest.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+        os.replace(temporary_manifest, previous)
+    except Exception:
+        if backup is not None:
+            recover_previous_output(directory)
+        raise
+    if backup is not None:
+        shutil.rmtree(backup)
 
 
 def main() -> None:
@@ -1472,18 +1936,68 @@ def main() -> None:
     if config.output_dir == config.data_root or config.data_root in config.output_dir.parents:
         raise ValueError("Output directory must be outside the dataset root")
     config.output_dir.mkdir(parents=True, exist_ok=True)
-    out = Output()
-    LOG.info("[2/12] Selecting backend")
-    backend = Backend(config.backend, out)
-    with tempfile.TemporaryDirectory(prefix="dataset-analysis-", dir=config.output_dir) as temporary:
-        db = make_index(Path(temporary) / "index.sqlite3")
+    with output_lock(config.output_dir):
+        recover_previous_output(config.output_dir)
+        recover_previous_cache(config.output_dir)
+        for stale_stage in config.output_dir.glob(".analysis-output-*"):
+            if stale_stage.is_dir():
+                shutil.rmtree(stale_stage)
+        out = Output()
+        LOG.info("[2/12] Selecting backend")
+        backend = Backend(config.backend, out)
+        signature = run_signature(config, files, backend)
+        cache_signature = ingestion_signature(config, files, backend)
+        if config.data_percent == 100:
+            state_dir = config.output_dir / ".dataset_analysis_state"
+            cache_dir = config.output_dir / ".dataset_analysis_cache"
+        else:
+            state_dir = config.output_dir / ".dataset_analysis_states" / cache_signature
+            cache_dir = config.output_dir / ".dataset_analysis_caches" / cache_signature
+        cache_path = cache_dir / "index.sqlite3"
+        if not config.force and not state_dir.exists() and completed_run_valid(
+                config.output_dir, signature):
+            LOG.info("Matching complete analysis found; reusing %s",
+                     config.output_dir / "report.md")
+            return
+        if config.force and state_dir.exists():
+            shutil.rmtree(state_dir)
+        cached = (open_reusable_cache(cache_path, cache_signature)
+                  if not config.force and not state_dir.exists() else None)
+        using_cache = cached is not None
+        if cached is not None:
+            db, checkpoint = cached
+            LOG.info("Reusing completed SQLite index: %s", cache_path)
+        else:
+            state_dir.mkdir(parents=True, exist_ok=True)
+            db = make_index(state_dir / "index.sqlite3")
         try:
-            LOG.info("[3/12] Profiling source TSVs")
-            profile_sources(files, config, backend, db, out)
-            LOG.info("[4/12] Parsing ground truth")
-            profile_ground_truth(files[("train", "ground_truth")], config, db, out)
-            LOG.info("[5/12] Indexing records")
-            index_records(db)
+            if cached is None:
+                checkpoint = Checkpoint(db, cache_signature)
+            restored = checkpoint.output()
+            if checkpoint.restored_output is not None:
+                out = restored
+                backend.output = out
+                if (config.backend == "auto" and
+                        checkpoint.state.get("backend_effective") == "cpu"):
+                    backend.name = "cpu"
+                LOG.info("Restored saved ingestion summaries")
+            if using_cache:
+                LOG.info("[3/12] Reusing cached source profiles")
+                LOG.info("[4/12] Reusing cached ground truth")
+                LOG.info("[5/12] Reusing record indexes")
+            else:
+                linked = sampled_match_ids(files[("train", "ground_truth")], config)
+                if config.data_percent != 100:
+                    LOG.info("Selected linked records: S2=%s, S3=%s",
+                             f'{len(linked["source2"]):,}', f'{len(linked["source3"]):,}')
+                LOG.info("[3/12] Profiling source TSVs")
+                profile_sources(files, config, backend, db, out, checkpoint, linked)
+                del linked
+                LOG.info("[4/12] Parsing ground truth")
+                profile_ground_truth(files[("train", "ground_truth")], config, db, out,
+                                     checkpoint)
+                LOG.info("[5/12] Indexing records")
+                index_records(db)
             LOG.info("[6/12] Validating IDs and ground-truth references")
             validate_ids(db, out)
             LOG.info("[7/12] Analyzing duplicates")
@@ -1501,37 +2015,54 @@ def main() -> None:
                 LOG.info("[11/12] Skipping optional expensive analysis")
         finally:
             db.close()
-    LOG.info("[12/12] Writing outputs")
-    add_column_examples(out, config)
-    save_tables(out, config.output_dir)
-    if config.plots:
-        make_plots(out, config.output_dir)
-    truth_summary = out.tables.get("ground_truth_summary", [])
-    unseen_countries = [row["field"] for row in out.tables.get("train_test_comparison", [])
-                        if row["measure"] == "country_rows" and row.get("test_unseen")]
-    out.summary.update({
-        "dataset_root": str(config.data_root), "output_dir": str(config.output_dir),
-        "backend": backend.name, "files": out.tables.get("dataset_summary", []),
-        "warnings": out.warnings, "expensive_analysis": config.expensive_analysis,
-        "key_findings": {
-            "total_source_rows": sum(row["rows"] for row in out.tables.get("dataset_summary", [])
-                                     if row["source"] in SOURCES),
-            "singleton_percent": next((row["count"] for row in truth_summary
-                                       if row["measure"] == "singleton_percent"), None),
-            "test_only_countries": unseen_countries,
-        },
-        "config": {key: str(value) if isinstance(value, Path) else value
-                   for key, value in asdict(config).items()},
-    })
-    (config.output_dir / "summary.json").write_text(
-        json.dumps(out.summary, ensure_ascii=False, indent=2, default=format_number),
-        encoding="utf-8")
-    write_report(out, config, backend)
-    LOG.info("Profiled %s source records; singleton share: %s%%",
-             f'{out.summary["key_findings"]["total_source_rows"]:,}',
-             out.summary["key_findings"]["singleton_percent"])
-    LOG.info("Analysis complete. Report: %s", config.output_dir / "report.md")
-    LOG.info("Machine-readable tables and summary: %s", config.output_dir)
+        LOG.info("[12/12] Writing outputs")
+        for row in out.tables.get("dataset_summary", []):
+            row.setdefault("input_rows", row["rows"])
+            row.setdefault("sample_percent_actual", 100.0)
+        add_column_examples(out, config)
+        truth_summary = out.tables.get("ground_truth_summary", [])
+        unseen_countries = [row["field"] for row in out.tables.get("train_test_comparison", [])
+                            if row["measure"] == "country_rows" and row.get("test_unseen")]
+        out.summary.update({
+            "dataset_root": str(config.data_root), "output_dir": str(config.output_dir),
+            "cache_path": str(cache_path),
+            "sampling": {"requested_percent": config.data_percent,
+                         "policy": "source1_with_all_known_matches_and_background" if
+                         config.data_percent != 100 else "all_rows",
+                         "seed": config.random_seed},
+            "backend": backend.name, "files": out.tables.get("dataset_summary", []),
+            "gpu_acceleration": "batched string lengths only" if backend.name == "gpu" else "none",
+            "warnings": out.warnings, "expensive_analysis": config.expensive_analysis,
+            "key_findings": {
+                "total_source_rows": sum(row["rows"] for row in out.tables.get("dataset_summary", [])
+                                         if row["source"] in SOURCES),
+                "singleton_percent": next((row["count"] for row in truth_summary
+                                           if row["measure"] == "singleton_percent"), None),
+                "test_only_countries": unseen_countries,
+            },
+            "config": {key: str(value) if isinstance(value, Path) else value
+                       for key, value in asdict(config).items() if key != "force"},
+        })
+        with tempfile.TemporaryDirectory(prefix=".analysis-output-", dir=config.output_dir) as temp:
+            staging = Path(temp)
+            save_tables(out, staging)
+            if config.plots:
+                make_plots(out, staging)
+            out.summary["warnings"] = out.warnings
+            (staging / "summary.json").write_text(
+                json.dumps(out.summary, ensure_ascii=False, indent=2, default=format_number),
+                encoding="utf-8")
+            write_report(out, config, backend, staging)
+            publish_outputs(staging, config.output_dir, signature)
+        if not using_cache:
+            publish_cache(state_dir, cache_dir)
+            LOG.info("Saved reusable SQLite index: %s", cache_path)
+        singleton_share = out.summary["key_findings"]["singleton_percent"]
+        LOG.info("Profiled %s source records; singleton share: %s",
+                 f'{out.summary["key_findings"]["total_source_rows"]:,}',
+                 f"{singleton_share:.2f}%" if singleton_share is not None else "unavailable")
+        LOG.info("Analysis complete. Report: %s", config.output_dir / "report.md")
+        LOG.info("Machine-readable tables and summary: %s", config.output_dir)
 
 
 if __name__ == "__main__":
