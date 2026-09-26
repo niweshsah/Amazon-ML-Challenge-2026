@@ -30,9 +30,11 @@ class PairDataset(Dataset):
 
 
 def load_model(cfg: dict, adapter: Path | None = None, trainable: bool = False):
-    tokenizer = AutoTokenizer.from_pretrained(cfg["model"], use_fast=True)
+    tokenizer = AutoTokenizer.from_pretrained(cfg["model"], use_fast=True,
+                                               revision=cfg.get("model_revision"))
     model = AutoModel.from_pretrained(cfg["model"], torch_dtype=torch.bfloat16,
-                                      attn_implementation="sdpa")
+                                      attn_implementation="sdpa",
+                                      revision=cfg.get("model_revision"))
     if adapter:
         model = PeftModel.from_pretrained(model, adapter, is_trainable=trainable)
     elif trainable:
@@ -111,9 +113,30 @@ def evaluate(cfg: dict, tokenizer, model, label: str) -> dict:
               "nonempty_queries": nonempty, **recall, "best_threshold": best,
               "mean_positive_cosine": float(np.mean(positive_scores)) if positive_scores else None,
               "mean_top_negative_cosine": float(np.mean(negative_scores))}
+    query_tags = []
+    for query in queries:
+        tags = {t for t in query.get("tags", "").split(",") if t}
+        if "Country: India" in query["text"]:
+            tags.add("country_india")
+        if "Country: US" in query["text"]:
+            tags.add("country_us")
+        query_tags.append(tags)
     group_stats = {}
-    for tag in sorted({t for q in queries for t in q.get("tags", "").split(",") if t}):
-        subset = [i for i, q in enumerate(queries) if tag in q.get("tags", "").split(",")]
+    per_query_f05 = []
+    for i, ids in enumerate(truth):
+        selected = {target_ids[j] for j in order[i, :50]
+                    if scores[i, j] >= best["threshold"]}
+        if not ids:
+            per_query_f05.append(float(not selected))
+        elif not selected:
+            per_query_f05.append(0.0)
+        else:
+            hit = len(selected & ids)
+            precision, sensitivity = hit / len(selected), hit / len(ids)
+            per_query_f05.append(1.25 * precision * sensitivity /
+                                 (0.25 * precision + sensitivity) if hit else 0.0)
+    for tag in sorted({t for tags in query_tags for t in tags}):
+        subset = [i for i, tags in enumerate(query_tags) if tag in tags]
         valid = [i for i in subset if truth[i]]
         recall5 = sum(any(target_ids[j] in truth[i] for j in order[i, :5]) for i in valid) / max(1, len(valid))
         singleton_accuracy = None
@@ -121,6 +144,7 @@ def evaluate(cfg: dict, tokenizer, model, label: str) -> dict:
             singleton_accuracy = sum(not any(scores[i, j] >= best["threshold"] for j in order[i, :50])
                                      for i in subset) / max(1, len(subset))
         group_stats[tag] = {"queries": len(subset), "recall@5": recall5,
+                            "macro_f0.5": float(np.mean([per_query_f05[i] for i in subset])),
                             "singleton_accuracy": singleton_accuracy}
     result["edge_groups"] = group_stats
     save_json(root / f"{label}_evaluation.json", result)
@@ -143,6 +167,8 @@ def train(cfg: dict, smoke_steps: int = 0) -> dict:
     started = time.monotonic()
     log_path = root / ("smoke_log.jsonl" if smoke_steps else "training_log.jsonl")
     save_dir = root / ("smoke_adapter" if smoke_steps else "final_adapter")
+    best_score = -1.0
+    best_step = None
     model.train()
     with log_path.open("w") as log:
         for epoch in range(cfg["epochs"]):
@@ -160,28 +186,46 @@ def train(cfg: dict, smoke_steps: int = 0) -> dict:
                     optimizer.step()
                     optimizer.zero_grad(set_to_none=True)
                 if step == 1 or step % 20 == 0:
-                    event = {"step": step, "epoch": epoch, "loss": float(loss) * accum,
+                    event = {"step": step, "epoch": epoch, "loss": loss.detach().item() * accum,
                              "elapsed_sec": round(time.monotonic() - started, 1),
                              "gpu_reserved_gb": round(torch.cuda.max_memory_reserved() / 2**30, 2)}
                     log.write(json.dumps(event) + "\n"); log.flush()
                     print(json.dumps(event), flush=True)
                 if step % cfg["checkpoint_steps"] == 0 and not smoke_steps:
                     model.save_pretrained(root / "latest_adapter")
+                if step % (cfg["checkpoint_steps"] * 2) == 0 and not smoke_steps:
+                    metric = evaluate(cfg, tokenizer, model, f"step_{step}")
+                    score = metric["best_threshold"]["macro_f0.5"]
+                    if score > best_score:
+                        best_score, best_step = score, step
+                        model.save_pretrained(save_dir)
+                    model.train()
                 if smoke_steps and step >= smoke_steps:
                     break
                 if time.monotonic() - started > cfg["max_train_minutes"] * 60:
                     break
             if smoke_steps and step >= smoke_steps or time.monotonic() - started > cfg["max_train_minutes"] * 60:
                 break
-    model.save_pretrained(save_dir)
+    if not smoke_steps:
+        metric = evaluate(cfg, tokenizer, model, "last_step")
+        score = metric["best_threshold"]["macro_f0.5"]
+        if score > best_score:
+            best_score, best_step = score, step
+            model.save_pretrained(save_dir)
+    else:
+        model.save_pretrained(save_dir)
     tokenizer.save_pretrained(save_dir)
     result = {"steps": step, "pairs_seen": step * cfg["batch_size"],
               "elapsed_sec": time.monotonic() - started,
               "peak_gpu_reserved_gb": torch.cuda.max_memory_reserved() / 2**30,
-              "adapter": str(save_dir)}
+              "adapter": str(save_dir), "best_step": best_step,
+              "best_validation_macro_f0.5": best_score if best_step is not None else None}
     save_json(root / ("smoke_result.json" if smoke_steps else "training_result.json"), result)
     if not smoke_steps:
-        result["evaluation"] = evaluate(cfg, tokenizer, model, "fine_tuned")
+        del model
+        torch.cuda.empty_cache()
+        best_tokenizer, best_model = load_model(cfg, save_dir)
+        result["evaluation"] = evaluate(cfg, best_tokenizer, best_model, "fine_tuned")
     return result
 
 
@@ -191,16 +235,20 @@ if __name__ == "__main__":
     parser.add_argument("--config")
     parser.add_argument("--model", help="Override pretrained model for a baseline comparison")
     parser.add_argument("--smoke-steps", type=int, default=3)
+    parser.add_argument("--adapter", help="Adapter path for evaluate; defaults to final_adapter")
+    parser.add_argument("--label", help="Output label for evaluate")
     args = parser.parse_args()
     cfg = config(args.config)
     if args.model:
         cfg["model"] = args.model
+        cfg.pop("model_revision", None)
     if not torch.cuda.is_available():
         raise RuntimeError("Training and evaluation require CUDA inside ./run_qwen.sh")
     if args.command in {"baseline", "evaluate"}:
-        adapter = None if args.command == "baseline" else Path(cfg["output_dir"]) / "final_adapter"
+        adapter = None if args.command == "baseline" else Path(args.adapter or Path(cfg["output_dir"]) / "final_adapter")
         tokenizer, model = load_model(cfg, adapter)
-        label = ("zero_shot_" + cfg["model"].split("/")[-1].lower()) if adapter is None else "fine_tuned"
+        label = args.label or (("zero_shot_" + cfg["model"].split("/")[-1].lower())
+                               if adapter is None else "fine_tuned")
         result = evaluate(cfg, tokenizer, model, label)
     else:
         result = train(cfg, args.smoke_steps if args.command == "smoke" else 0)

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 
@@ -14,13 +15,30 @@ from train import encode_numpy, load_model
 
 
 def embed(cfg: dict, split: str, source: int, batch_size: int, shard_rows: int,
-          max_rows: int | None = None) -> dict:
-    model_path = Path(cfg["output_dir"]) / "final_adapter"
+          max_rows: int | None = None, adapter: str | None = None,
+          output_subdir: str = "embeddings", embedding_dir: str | None = None) -> dict:
+    model_path = Path(adapter) if adapter else Path(cfg["output_dir"]) / "final_adapter"
     if not model_path.exists():
         raise FileNotFoundError(f"Trained adapter not found: {model_path}")
     tokenizer, model = load_model(cfg, model_path)
-    root = Path(cfg["output_dir"]) / "embeddings" / f"{split}_source{source}"
+    root = (Path(embedding_dir) if embedding_dir else
+            Path(cfg["output_dir"]) / output_subdir) / f"{split}_source{source}"
     root.mkdir(parents=True, exist_ok=True)
+    adapter_file = model_path / "adapter_model.safetensors"
+    with adapter_file.open("rb") as handle:
+        hasher = hashlib.sha256()
+        for chunk in iter(lambda: handle.read(4 * 1024 * 1024), b""):
+            hasher.update(chunk)
+    run_manifest = {"model": cfg["model"], "model_revision": cfg.get("model_revision"),
+                    "adapter_sha256": hasher.hexdigest(), "max_length": cfg["max_length"],
+                    "input": str(source_path(cfg, split, source).resolve()),
+                    "dimension": 1024, "dtype": "float16", "shard_rows": shard_rows}
+    run_manifest_path = root / "run_manifest.json"
+    if run_manifest_path.exists():
+        if json.loads(run_manifest_path.read_text()) != run_manifest:
+            raise RuntimeError(f"Embedding settings or adapter changed for {root}; use a new output directory")
+    else:
+        save_json(run_manifest_path, run_manifest)
     # Keep one shard in host memory and only one encoder batch in GPU memory.
     import pyarrow.dataset as ds
     stream = ds.dataset(source_path(cfg, split, source), format="parquet").to_batches(
@@ -76,7 +94,11 @@ if __name__ == "__main__":
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--shard-rows", type=int, default=50000)
     parser.add_argument("--max-rows", type=int)
+    parser.add_argument("--adapter", help="Adapter path; defaults to final_adapter")
+    parser.add_argument("--output-subdir", default="embeddings")
+    parser.add_argument("--embedding-dir", help="Independent storage root for large full-dataset embeddings")
     parser.add_argument("--config")
     args = parser.parse_args()
     print(json.dumps(embed(config(args.config), args.split, args.source, args.batch_size,
-                           args.shard_rows, args.max_rows), indent=2))
+                           args.shard_rows, args.max_rows, args.adapter,
+                           args.output_subdir, args.embedding_dir), indent=2))
