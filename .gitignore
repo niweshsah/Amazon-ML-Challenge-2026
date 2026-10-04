@@ -26,3 +26,4 @@ final_pipeline/hf-cache/
 *.tmp
 *_submission.zip
 # Intentionally tracked: YAML/JSON configuration, uv.lock, requirements, migration inventory, preserved logs/artifacts.
+.cpp
