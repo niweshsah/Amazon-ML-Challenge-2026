@@ -1,0 +1,84 @@
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 22px 0;
+  table-layout: fixed;
+}
+
+.comparison-table th {
+  font-size: .75rem;
+  color: var(--muted);
+  text-align: left;
+  padding: 12px;
+  background: #f5f7fb;
+  line-height: 1.6;
+}
+
+.comparison-table th:first-child {
+  width: 17%;
+}
+
+.comparison-table td {
+  padding: 14px 12px;
+  vertical-align: top;
+  border-bottom: 1px solid var(--line);
+  font-size: .875rem;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+
+.comparison-table td:first-child {
+  color: var(--muted);
+  font-size: .75rem;
+}
+
+mark {
+  background: #fff0c4;
+  color: #664b07;
+  border-radius: 3px;
+  padding: 2px;
+}
+
+.agreement-chip {
+  display: inline-block;
+  font-size: .75rem;
+  padding: 3px 6px;
+  background: #f0f3f8;
+  color: var(--muted);
+  margin-top: 7px;
+  border-radius: 4px;
+  line-height: 1.5;
+}
+
+.agreement-chip.exact {
+  background: var(--green-wash);
+  color: var(--green);
+}
+
+.inspector-note {
+  background: #f5f7fb;
+  padding: 14px 16px;
+  border-radius: 8px;
+  font-size: .875rem;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.methodology-page {
+  max-width: 860px;
+  padding-bottom: 50px;
+}
+
+.methodology-page h1 {
+  margin-bottom: 20px;
+}
+
+.methodology-page h2 {
+  margin: 28px 0 10px;
+}
+
+.methodology-page p, .methodology-page li {
+  font-size: 1rem;
+  color: var(--muted);
+  line-height: 1.75;
+}

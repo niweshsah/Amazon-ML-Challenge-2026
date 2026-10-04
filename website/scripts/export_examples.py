@@ -47,14 +47,28 @@ def export_examples(data_dir, output, max_queries, seed, synthetic):
     target_counts = {}
     for source in (2, 3):
         target_counts[str(source)] = 0
+        background = []
         for target in read_rows(data_dir / f"train_source{source}.tsv"):
             target_counts[str(source)] += 1
             target_id = target["entity_id"]
             if not target_id.startswith(f"S{source}-"):
                 raise ValueError(f"Invalid source prefix: {target_id}")
             if target_id in positives:
+                if target_id in found_positives:
+                    raise ValueError(f"Duplicate positive target ID: {target_id}")
                 target_records[target_id] = {field: target[field] for field in FIELDS}
                 found_positives.add(target_id)
+            else:
+                ranking = int(hashlib.sha256(f"{seed}:target:{target_id}".encode()).hexdigest(), 16)
+                entry = (-ranking, target_id, target)
+                if len(background) < 2000:
+                    heapq.heappush(background, entry)
+                elif entry[:2] > background[0][:2]:
+                    heapq.heapreplace(background, entry)
+        pool = [record for record in target_records.values() if record["entity_id"].startswith(f"S{source}-")]
+        pool.extend(entry[2] for entry in background)
+        for target in pool:
+            target_id = target["entity_id"]
             for query in queries:
                 query_id = query["entity_id"]
                 if target_id in truth[query_id]:
@@ -85,7 +99,7 @@ def export_examples(data_dir, output, max_queries, seed, synthetic):
             "reference_count": len(queries), "true_links": sum(len(links) for links in truth.values()),
             "singletons": sum(not links for links in truth.values()),
             "countries": sorted({query["country"] for query in queries}), "target_source_counts": target_counts,
-            "negative_selection": "Up to four unlinked targets per source, prioritizing country agreement and similar names. Labels come only from ground truth."},
+            "negative_selection": "Up to four unlinked targets per source, selected from a bounded target sample, prioritizing country agreement and similar names. Labels come only from ground truth."},
         "examples": examples,
     }
     output.parent.mkdir(parents=True, exist_ok=True)

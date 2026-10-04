@@ -1,0 +1,66 @@
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+h2 {
+  font-size: 1.35rem;
+  letter-spacing: -.025em;
+  line-height: 1.35;
+  font-weight: 700;
+}
+
+.section-heading p {
+  font-size: .875rem;
+  color: var(--muted);
+  margin-top: 5px;
+}
+
+.subtle-tag {
+  font-size: .75rem;
+  letter-spacing: .04em;
+  color: var(--muted);
+  white-space: nowrap;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 7px 9px;
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--muted);
+  padding: 50px 24px;
+  font-size: .875rem;
+}
+
+.empty-state strong {
+  display: block;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+
+footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: .875rem;
+  padding: 24px 0;
+}
+
+footer strong {
+  color: var(--ink);
+}
+
+footer div {
+  display: flex;
+  gap: 24px;
+}
+
+footer a:hover {
+  color: var(--blue);
+}

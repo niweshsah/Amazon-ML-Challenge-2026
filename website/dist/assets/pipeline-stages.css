@@ -1,0 +1,58 @@
+.architecture-section {
+  padding: 38px 0;
+}
+
+.architecture-section h2 {
+  font-size: 1.5rem;
+  margin-top: 9px;
+}
+
+.pipeline-stages {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.pipeline-stage {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 16px;
+  text-align: left;
+  transition: border-color .15s, transform .15s;
+}
+
+.pipeline-stage:hover {
+  border-color: #b8caff;
+  transform: translateY(-2px);
+}
+
+.pipeline-stage.selected {
+  border-color: var(--blue);
+  background: var(--blue-wash);
+  box-shadow: inset 0 3px var(--blue);
+}
+
+.stage-number {
+  color: var(--muted);
+  font-size: .75rem;
+  font-weight: 650;
+  letter-spacing: .08em;
+}
+
+.pipeline-stage.selected .stage-number {
+  color: var(--blue);
+}
+
+.pipeline-stage strong {
+  font-size: .875rem;
+  display: block;
+  line-height: 1.5;
+  margin: 12px 0 4px;
+}
+
+.pipeline-stage > span:last-child {
+  font-size: .75rem;
+  color: var(--muted);
+}

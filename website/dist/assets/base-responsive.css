@@ -1,0 +1,72 @@
+@media (max-width: 1000px) {
+  .brand-label {
+    display: none;
+  }
+  .dataset-note {
+    max-width: 270px;
+  }
+  .page-shell {
+    padding: 28px 20px 0;
+  }
+}
+
+@media (max-width: 720px) {
+  .site-header {
+    padding: 14px 18px;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .brand {
+    font-size: 1.25rem;
+  }
+  .site-header nav {
+    order: 3;
+    width: 100%;
+    margin-left: 0;
+    justify-content: center;
+    gap: 40px;
+  }
+  .repository-link {
+    margin-left: auto;
+  }
+  .intro {
+    display: block;
+  }
+  .dataset-note {
+    margin-top: 18px;
+    max-width: none;
+    width: fit-content;
+  }
+  .summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .stat-card {
+    padding: 16px;
+  }
+  .stat-card::after {
+    display: none;
+  }
+  .section-heading {
+    align-items: flex-start;
+  }
+  .section-heading .subtle-tag {
+    display: none;
+  }
+  .page-shell {
+    padding: 24px 14px 0;
+  }
+  footer {
+    flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

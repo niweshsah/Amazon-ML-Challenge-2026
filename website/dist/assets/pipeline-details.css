@@ -1,0 +1,53 @@
+.stage-detail {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 24px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: white;
+  padding: 24px;
+  margin-top: 14px;
+}
+
+.stage-detail h3 {
+  font-size: 1.1rem;
+  margin-bottom: 7px;
+}
+
+.stage-detail p {
+  font-size: .875rem;
+  color: var(--muted);
+}
+
+.stage-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.stage-tags span {
+  font-size: .75rem;
+  background: #f2f5fa;
+  color: var(--muted);
+  padding: 6px 8px;
+  border-radius: 5px;
+}
+
+.stage-example {
+  border-left: 1px solid var(--line);
+  padding-left: 24px;
+}
+
+.stage-example .eyebrow {
+  margin-bottom: 10px;
+}
+
+.stage-example code {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: .875rem;
+  line-height: 1.7;
+  color: #425679;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

@@ -1,0 +1,22 @@
+{
+  "preserved_files": 27,
+  "preservation_check": "All preserved artifact/document SHA-256 checksums match the migration inventory.",
+  "removed": [
+    "ml-challenge/",
+    "run_issac.sh",
+    "run_pytorch.sh",
+    "push.sh",
+    "README.md"
+  ],
+  "retained_top_level": [
+    "final_pipeline/",
+    "website/",
+    ".git/",
+    ".gitignore"
+  ],
+  "retained_shell_scripts": [
+    "final_pipeline/scripts/train_server.sh",
+    "final_pipeline/scripts/predict_server.sh"
+  ],
+  "reason": "The two retained scripts provide documented server training and prediction commands."
+}

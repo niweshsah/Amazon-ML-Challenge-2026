@@ -1,0 +1,90 @@
+.comparison-list {
+  padding: 8px 24px;
+  height: 427px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.comparison-card {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+}
+
+.comparison-card.positive {
+  border-left: 3px solid #5aae88;
+}
+
+.comparison-card.negative {
+  border-left: 3px solid #e7bab8;
+}
+
+.comparison-card h4 {
+  margin: 8px 0 5px;
+  font-size: 1rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.comparison-card p {
+  color: var(--muted);
+  font-size: .875rem;
+}
+
+.comparison-card .record-id {
+  margin-left: 0;
+}
+
+.comparison-labels {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.source-label {
+  font-size: .75rem;
+  color: var(--muted);
+  background: #f1f4f8;
+  padding: 4px 7px;
+  border-radius: 4px;
+}
+
+.compare-button {
+  font-size: .875rem;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 9px 12px;
+  background: white;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.compare-button:hover {
+  border-color: #b8caff;
+  background: var(--blue-wash);
+  color: var(--blue);
+}
+
+.comparison-footnote {
+  color: var(--muted);
+  font-size: .75rem;
+  padding: 13px 24px;
+  border-top: 1px solid var(--line);
+  line-height: 1.5;
+}
+
+.singleton-message {
+  padding: 12px 15px;
+  background: #f6f8fc;
+  border-radius: 8px;
+  font-size: .875rem;
+  color: var(--muted);
+  margin-bottom: 12px;
+  line-height: 1.55;
+}

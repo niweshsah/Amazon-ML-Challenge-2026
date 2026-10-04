@@ -1,0 +1,76 @@
+@media (max-width: 1050px) {
+  .workspace {
+    grid-template-columns: 250px minmax(0, 1fr);
+  }
+  .ground-truth-caption {
+    display: none;
+  }
+  .selected-record {
+    padding: 22px;
+  }
+  .comparison-card {
+    align-items: flex-start;
+  }
+  .comparison-card .compare-button {
+    font-size: .75rem;
+  }
+}
+
+@media (max-width: 720px) {
+  .workspace {
+    display: block;
+  }
+  .business-browser {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .business-list {
+    height: 220px;
+  }
+  .browser-footer {
+    display: none;
+  }
+  .selected-record {
+    padding: 20px;
+  }
+  .selected-record h3 {
+    font-size: 1.35rem;
+  }
+  .record-overline {
+    align-items: flex-start;
+  }
+  .view-toolbar {
+    padding: 12px 16px;
+  }
+  .segmented-control {
+    width: 100%;
+  }
+  .segmented-control button {
+    flex: 1;
+    padding: 10px 8px;
+  }
+  .comparison-list {
+    padding: 8px 16px;
+    height: auto;
+    max-height: 550px;
+  }
+  .comparison-controls {
+    padding: 12px 16px 6px;
+  }
+  .comparison-count {
+    display: none;
+  }
+  .comparison-card {
+    display: block;
+  }
+  .compare-button {
+    margin-top: 12px;
+    width: 100%;
+  }
+  .comparison-footnote {
+    padding: 14px 16px;
+  }
+  .source-filters {
+    gap: 18px;
+  }
+}

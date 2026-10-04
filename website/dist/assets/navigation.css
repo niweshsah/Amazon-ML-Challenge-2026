@@ -1,0 +1,83 @@
+.site-header {
+  min-height: 80px;
+  background: white;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  padding: 16px max(28px, calc((100vw - 1440px) / 2));
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  font-weight: 750;
+  font-size: 1.4rem;
+  letter-spacing: -.045em;
+  gap: 10px;
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  background: var(--blue);
+  color: white;
+  border-radius: 10px;
+  font-size: 1.7rem;
+  letter-spacing: -.15em;
+  padding-right: 4px;
+  position: relative;
+}
+
+.brand-mark span {
+  position: absolute;
+  top: 7px;
+  right: 8px;
+  font-size: 1.2rem;
+}
+
+.brand-label {
+  font-size: .75rem;
+  letter-spacing: .1em;
+  font-weight: 600;
+  color: var(--muted);
+  border-left: 1px solid var(--line);
+  margin-left: 12px;
+  padding-left: 18px;
+}
+
+.site-header nav {
+  display: flex;
+  gap: 26px;
+  margin-left: auto;
+}
+
+.nav-link {
+  font-size: .875rem;
+  color: var(--muted);
+  font-weight: 550;
+  padding: 10px 0;
+}
+
+.nav-link:hover, .nav-link.active {
+  color: var(--blue);
+}
+
+.repository-link {
+  border: 1px solid var(--line);
+  font-size: .875rem;
+  font-weight: 650;
+  border-radius: 8px;
+  padding: 10px 14px;
+  white-space: nowrap;
+}
+
+.repository-link:hover {
+  background: var(--blue-wash);
+}
+
+.repository-link span {
+  display: none;
+}

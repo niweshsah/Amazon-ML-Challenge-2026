@@ -2,7 +2,7 @@
   "metadata": {
     "title": "Synthetic ground-truth examples",
     "synthetic": true,
-    "generated_at": "2026-10-04T09:35:07.985353+00:00",
+    "generated_at": "2026-10-04T09:50:25.766155+00:00",
     "reference_count": 100,
     "true_links": 160,
     "singletons": 20,
@@ -14,7 +14,7 @@
       "2": 200,
       "3": 200
     },
-    "negative_selection": "Up to four unlinked targets per source, prioritizing country agreement and similar names. Labels come only from ground truth."
+    "negative_selection": "Up to four unlinked targets per source, selected from a bounded target sample, prioritizing country agreement and similar names. Labels come only from ground truth."
   },
   "examples": [
     {

@@ -1,0 +1,93 @@
+.source-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--blue);
+}
+
+.workspace-main {
+  min-width: 0;
+}
+
+.selected-record {
+  padding: 24px 28px 22px;
+  background: linear-gradient(120deg, #fff 40%, #f4f7ff);
+  min-height: 165px;
+}
+
+.record-overline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.source-pill {
+  color: var(--blue);
+  background: #e9efff;
+  border: 1px solid #d9e4ff;
+  border-radius: 5px;
+  padding: 5px 8px;
+  font-size: .75rem;
+  font-weight: 650;
+}
+
+.record-id {
+  color: var(--muted);
+  font-size: .75rem;
+  letter-spacing: .025em;
+  margin-left: 8px;
+}
+
+.selected-record h3 {
+  font-size: 1.55rem;
+  line-height: 1.45;
+  letter-spacing: -.025em;
+  overflow-wrap: anywhere;
+}
+
+.record-fields {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  font-size: .875rem;
+  color: var(--muted);
+  margin-top: 9px;
+  line-height: 1.5;
+}
+
+.record-fields span:first-child {
+  overflow-wrap: anywhere;
+}
+
+.field-symbol {
+  color: #91a0b6;
+  padding-right: 5px;
+}
+
+.match-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 5px;
+  padding: 6px 9px;
+  font-weight: 650;
+  font-size: .75rem;
+  white-space: nowrap;
+}
+
+.match-badge.positive {
+  color: var(--green);
+  background: var(--green-wash);
+}
+
+.match-badge.negative {
+  color: var(--red);
+  background: var(--red-wash);
+}
+
+.match-badge.neutral {
+  color: var(--muted);
+  background: #edf1f7;
+}

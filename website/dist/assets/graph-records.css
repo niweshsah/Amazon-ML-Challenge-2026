@@ -1,0 +1,61 @@
+.graph-node {
+  border: 1px solid #c7e5d7;
+  border-radius: 8px;
+  padding: 11px 12px;
+  background: white;
+  text-align: left;
+}
+
+.graph-node.negative {
+  border-color: #ecd0cd;
+}
+
+.graph-node:hover {
+  box-shadow: 0 4px 12px #1b305b12;
+}
+
+.graph-node strong {
+  display: block;
+  font-size: .875rem;
+  line-height: 1.5;
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+
+.graph-node small {
+  color: var(--muted);
+  font-size: .75rem;
+}
+
+.graph-node .match-badge {
+  padding: 4px 6px;
+}
+
+.graph-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  font-size: .75rem;
+  color: var(--muted);
+  padding: 18px 24px;
+}
+
+.graph-legend > span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.graph-legend > span:last-child {
+  margin-left: auto;
+}
+
+.legend-line {
+  width: 22px;
+  border-top: 2px solid #77b89c;
+}
+
+.legend-line.negative {
+  border-color: #d7a4a5;
+  border-top-style: dashed;
+}

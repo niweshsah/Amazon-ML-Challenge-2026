@@ -1,0 +1,68 @@
+@media (max-width: 900px) {
+  .pipeline-stages {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .about-section {
+    gap: 30px;
+  }
+  .graph-toolbar {
+    flex-wrap: wrap;
+  }
+  .connection-graph {
+    column-gap: 35px;
+  }
+}
+
+@media (max-width: 720px) {
+  .pipeline-stages {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .stage-detail, .about-section {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+  .stage-example {
+    padding: 16px 0 0;
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+  .connection-graph {
+    margin: 0 12px;
+    column-gap: 20px;
+  }
+  .graph-root {
+    margin-left: 8px;
+    padding: 10px;
+  }
+  .graph-targets {
+    margin-right: 8px;
+  }
+  .graph-node {
+    padding: 9px;
+  }
+  .graph-toolbar {
+    padding: 16px;
+  }
+  .graph-legend {
+    padding: 16px;
+  }
+  .graph-legend > span:last-child {
+    width: 100%;
+    margin: 0;
+  }
+  .dialog-title-row {
+    display: block;
+  }
+  dialog {
+    padding: 18px;
+  }
+  .comparison-table th, .comparison-table td {
+    padding: 10px 7px;
+  }
+  .comparison-table th:first-child {
+    width: 20%;
+  }
+  .about-facts {
+    margin-top: 8px;
+  }
+}

@@ -80,3 +80,7 @@ ER_DATA_DIR=/data/dataset/train ER_MODEL_DIR=/srv/models \
 ```
 
 Mounts use the consolidated directory, read-only input data, writable outputs/models, and a persistent Hugging Face cache. Training and prediction scripts accept additional CLI flags.
+
+## Interactive project explorer
+
+[EntityLens](../website/README.md) visualizes labelled positive/negative examples, field comparisons, singletons, and the pipeline architecture without executing models. Its independent static website runs locally and includes a GitHub Pages deployment template.
