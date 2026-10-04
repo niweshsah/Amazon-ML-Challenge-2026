@@ -1,4 +1,6 @@
-# Final entity-resolution pipeline
+# EntityLens — Final entity-resolution pipeline
+
+**[Live project explorer](https://entity-lens.pages.dev/)** · [Complete architecture](../README.md#complete-architecture) · [Architecture on the website](https://entity-lens.pages.dev/architecture.html)
 
 Raw records → Unicode preprocessing → trained Indic BGE-M3 CLS retrieval and character-trigram TF-IDF → candidate union → pair features → XGBoost reject/accept/route → supervised BGE reranker → independent pair matches.
 
@@ -83,4 +85,4 @@ Mounts use the consolidated directory, read-only input data, writable outputs/mo
 
 ## Interactive project explorer
 
-[EntityLens](../website/README.md) visualizes labelled positive/negative examples, field comparisons, singletons, and the pipeline architecture without executing models. Its independent static website runs locally and includes a GitHub Pages deployment template.
+[EntityLens live demo](https://entity-lens.pages.dev/) visualizes labelled positive/negative examples, field comparisons, singletons, and the pipeline architecture without executing models. Its independent static website runs locally and is hosted on Cloudflare Pages through GitHub integration. See the [website setup](../website/README.md) and [complete system architecture](../README.md).

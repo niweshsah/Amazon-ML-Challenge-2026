@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="The complete EntityLens architecture: Unicode preprocessing, hybrid retrieval, 22 pair features, supervised matching, calibration, evaluation, and deployment.">
+  <title>Full Architecture · EntityLens — Multilingual Business Entity Resolution</title>
+  <link rel="canonical" href="https://entity-lens.pages.dev/architecture.html">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="assets/base.css">
+  <link rel="stylesheet" href="assets/architecture-page.css">
+</head>
+<body>
+  <a class="skip-link" href="#architecture-content">Skip to architecture</a>
+  <header class="site-header">
+    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">e<span>l</span></span>EntityLens</a>
+    <nav aria-label="Main navigation"><a class="nav-link" href="index.html">Explorer</a><a class="nav-link active" href="architecture.html">Architecture</a><a class="nav-link" href="methodology.html">Methodology</a></nav>
+    <a class="repository-link" href="https://github.com/niweshsah/Amazon-ML-Challenge-2026" target="_blank" rel="noopener noreferrer">View GitHub</a>
+  </header>
+  <main class="page-shell architecture-page" id="architecture-content">
+    <div class="eyebrow">FULL SYSTEM ARCHITECTURE</div>
+    <h1>Inside <span>EntityLens.</span></h1>
+    <p class="architecture-intro">Multilingual Business Entity Resolution — from raw records to calibrated matching decisions.</p>
+    <p class="architecture-notice">This page documents the runnable pipeline. The explorer displays labelled ground-truth examples; no model runs in your browser.</p>
+    <section class="architecture-overview" aria-labelledby="flow-title">
+      <div class="eyebrow">INFERENCE FLOW</div>
+      <h2 id="flow-title">Two retrieval paths. One matching cascade.</h2>
+      <div class="flow-step"><span class="flow-index">01</span><div><strong>Raw records and text views</strong><p>Source 1 reference · Source 2/3 targets · Raw Unicode · Lexical views</p></div></div>
+      <div class="flow-channels">
+        <div class="flow-channel"><span class="eyebrow">DENSE CHANNEL</span><h3>Indic BGE-M3 + LoRA</h3><p>Normalized CLS embeddings · FAISS exact / IVF-PQ · Top-150 per source</p></div>
+        <div class="flow-channel"><span class="eyebrow">LEXICAL CHANNEL</span><h3>Character-trigram TF-IDF</h3><p>Normalized + transliterated text · Batched sparse search · Top-150 per source</p></div>
+      </div>
+      <div class="flow-step"><span class="flow-index">02</span><div><strong>Candidate union and 22 pair features</strong><p>Deduplicate pairs · Preserve scores, ranks, and channel provenance · Export the exact scored candidate set</p></div></div>
+      <div class="flow-step scoring-step"><span class="flow-index">03</span><div><strong>XGBoost and score calibration</strong><p>Field agreement · Missingness · Address numbers · Calibrated pair scores</p></div></div>
+      <div class="routing-branches">
+        <div class="routing-branch reject"><span>BELOW LOWER THRESHOLD</span><strong>Reject pair</strong></div>
+        <div class="routing-branch review"><span>BETWEEN THRESHOLDS</span><strong>BGE cross-encoder</strong><p>Joint pair scoring · Isotonic calibration · Acceptance threshold</p></div>
+        <div class="routing-branch accept"><span>ABOVE UPPER THRESHOLD</span><strong>Accept pair</strong></div>
+      </div>
+      <div class="flow-step"><span class="flow-index">04</span><div><strong>Independent final matches and validated TSVs</strong><p>Empty, single, or multiple matches · Complete test coverage · Every match contained in its candidate set</p></div></div>
+      <div class="training-lane"><div><span class="eyebrow">SEPARATE TRAINING PATH</span><p>Seeded entity groups · Held-out positive targets excluded from fitting</p></div><div class="split-grid"><span><strong>70%</strong>Fitting</span><span><strong>10%</strong>Development</span><span><strong>10%</strong>Calibration</span><span><strong>10%</strong>Audit</span></div></div>
+    </section>
+    <nav class="architecture-contents" aria-label="Architecture sections"><a href="#inputs">1. Inputs and matching contract</a><a href="#sampling">2. Deterministic sampling and supervision isolation</a><a href="#preprocessing">3. Unicode-safe representations</a><a href="#encoders">4. Neural models and supervised training</a><a href="#retrieval">5. Independent retrieval and candidate union</a><a href="#features">6. Pair features and XGBoost</a><a href="#calibration">7. Score calibration and routing policy</a><a href="#outputs">8. Independent decisions and submission outputs</a><a href="#evaluation">9. Evaluation and performance interpretation</a><a href="#operations">10. Storage, resumability, and execution</a><a href="#website">11. Website architecture and continuous deployment</a></nav>
+    <div class="architecture-chapters">
+      <section class="architecture-chapter" id="inputs">
+        <h2>1. Inputs and matching contract</h2>
+        <p>Source 1 is the reference source. Resolve each reference business independently against Sources 2 and 3 using entity_id, business_name, business_address, and country from tab-separated files.</p>
+        <ul>
+          <li>Training additionally reads train_ground_truth.tsv: one Source 1 ID and its complete comma-separated target match list, including empty lists for singletons.</li>
+          <li>Country remains an unrestricted string. Unicode names, unseen countries, missing addresses, and multiple matching target records are supported.</li>
+          <li>Test prediction includes every Source 1 entity and the complete Source 2/3 pools. Training sampling never limits test coverage.</li>
+        </ul>
+      </section>
+      <section class="architecture-chapter" id="sampling">
+        <h2>2. Deterministic sampling and supervision isolation</h2>
+        <p>The default training sample is 1.0 percent of Source 1, selected by seeded SHA-256 ranking with seed 42. The selected count is rounded upward; all selected true links and singleton groups are retained.</p>
+        <ul>
+          <li>Each training target pool contains every selected positive plus the configured percentage of remaining records from that source. Distractor sampling defaults to the Source 1 percentage and can be overridden independently.</li>
+          <li>Split complete Source 1 groups into 70% fitting, 10% development, 10% calibration, and 10% audit, with largest-remainder rounding for small samples.</li>
+          <li>All pairs for an entity remain together. Held-out positive targets are excluded from fitting supervision, including fitting negatives, but remain available to retrieval.</li>
+          <li>Development selects checkpoints; calibration fits score mappings and routing policy; the audit split provides the final held-out evaluation.</li>
+        </ul>
+      </section>
+      <section class="architecture-chapter" id="preprocessing">
+        <h2>3. Unicode-safe representations</h2>
+        <p>Store the original record alongside three text representations. Neural serialization preserves raw field values as Name, Address, and Country segments.</p>
+        <ul>
+          <li>Raw text feeds both neural models, preserving accented letters and Indic combining marks.</li>
+          <li>The normalized lexical view uses Unicode NFKC, case folding, whitespace cleanup, and punctuation handling while retaining Unicode letters, digits, and combining marks.</li>
+          <li>A separate Unidecode transliteration view supports lexical comparisons across writing systems. Original strings and entity IDs remain available for outputs and inspection.</li>
+          <li>Prepared records, source membership, row positions, split assignments, and training links are stored in disk-backed SQLite.</li>
+        </ul>
+      </section>
+      <section class="architecture-chapter" id="encoders">
+        <h2>4. Neural models and supervised training</h2>
+        <p>The bi-encoder embeds individual business records. The cross-encoder jointly scores a reference record and a target record only when the routing policy requires it.</p>
+        <ul>
+          <li>Bi-encoder: karmx/Llama-Karmx-Indic-Embedding-bge-m3, CLS pooling, L2-normalized vectors, and PEFT LoRA on query/value projections. Explicit positive and lexical hard-negative pairs use binary matching loss; the training logit is 20 × cosine similarity − 10.</li>
+          <li>Cross-encoder: BAAI/bge-reranker-v2-m3 with LoRA and a binary classification head. Supervision combines fitting positives with retrieval hard negatives ordered by dense and lexical similarity.</li>
+          <li>Neural training preserves fitting positives even when candidate retrieval misses them; this training-only preservation never inserts ground-truth targets into inference candidates.</li>
+          <li>Defaults: LoRA rank 16, alpha 32, dropout 0.05, up to five hard negatives per query, three epochs, AdamW learning rate 0.00002, batch size 64, and maximum token length 256.</li>
+          <li>Neural checkpoint selection uses development binary loss. CUDA inference/training uses BF16; gradient checkpointing reduces training memory.</li>
+          <li>Base-model revisions are pinned. Loading checks adapter base, tokenizer vocabulary, serialization, pooling, and maximum length. Incompatible or missing required assets fail explicitly.</li>
+        </ul>
+      </section>
+      <section class="architecture-chapter" id="retrieval">
+        <h2>5. Independent retrieval and candidate union</h2>
+        <p>Run dense and character-trigram TF-IDF searches independently against each target source, then union their results by the reference/target ID pair.</p>
+        <ul>
+          <li>Each channel initially retrieves Top-150 per target source: up to 600 candidates per reference business before overlaps and short or empty channels reduce that count.</li>
+          <li>Dense search uses normalized embeddings and inner product. Pools of at most 50,000 targets use exact FAISS IndexFlatIP; larger pools use IVF-PQ.</li>
+          <li>IVF-PQ defaults include at most 1,024 coarse lists, 32 PQ subquantizers adjusted to divide the embedding dimension, eight bits per subquantizer, nprobe 32, and up to 200,000 deterministically sampled index-training vectors.</li>
+          <li>TF-IDF uses character trigrams over the normalized and transliterated views, float32 weights, and a maximum vocabulary of 500,000 features. Sparse products process bounded query/target batches.</li>
+          <li>Each union member retains dense and lexical similarity, rank in each contributing channel, target source, and channel provenance. Missing channel ranks stay absent while both similarities are computed.</li>
+          <li>Ground truth is never consulted to inject inference candidates. Retrieval misses remain visible in candidate pair recall.</li>
+        </ul>
+      </section>
+      <section class="architecture-chapter" id="features">
+        <h2>6. Pair features and XGBoost</h2>
+        <p>Every candidate receives an explicit 22-feature vector: two retrieval similarities, six agreement/missingness features for each of three fields, and two address-number features.</p>
+        <ul>
+          <li>Per-field features: normalized equality, sequence similarity, token Jaccard, transliterated sequence similarity, left missingness, and right missingness for name, address, and country.</li>
+          <li>Address-number features: numeric token Jaccard and exact numeric-set agreement. Empty fields or empty number sets do not count as identity evidence.</li>
+          <li>Entity IDs, ground-truth labels, group assignments, sampling tags, and pool roles are excluded from the feature allowlist.</li>
+          <li>XGBoost fits retrieval pairs using binary logistic loss and external-memory quantile matrices. The current implementation uses CPU histogram training, up to 400 trees, depth 6, learning rate 0.05, and four threads.</li>
+          <li>Development log loss drives early stopping after 30 rounds without improvement; the selected best tree prefix is saved.</li>
+        </ul>
+      </section>
+      <section class="architecture-chapter" id="calibration">
+        <h2>7. Score calibration and routing policy</h2>
+        <p>Hash-rank the calibration entities into two disjoint halves. One fits independent isotonic mappings for XGBoost and cross-encoder scores; the other selects the complete-pipeline decision policy.</p>
+        <ul>
+          <li>Grid-search the lower XGBoost threshold, upper XGBoost threshold, and cross-encoder acceptance threshold by macro F0.5, accounting for retrieval misses and singleton outcomes.</li>
+          <li>The default grid has 15 evenly spaced probability values plus endpoints just outside zero and one. The lower threshold must be smaller than the upper threshold.</li>
+          <li>Threshold ties prefer higher global pair precision, then fewer routed pairs, then stable grid order.</li>
+          <li>Below the lower threshold: reject. Above the upper threshold: accept. Every intermediate score, including both boundaries, is routed to the cross-encoder.</li>
+          <li>Routed pairs are accepted when the calibrated cross-encoder score reaches its acceptance threshold. Missing cross-encoder assets stop routed inference; the policy never silently substitutes another decision rule.</li>
+          <li>Saved model content fingerprints bind the policy to its tree, adapters, and base-model assets. Calibration requires at least two entities and both positive and negative candidate labels.</li>
+        </ul>
+      </section>
+      <section class="architecture-chapter" id="outputs">
+        <h2>8. Independent decisions and submission outputs</h2>
+        <p>Make decisions independently for each candidate pair. There is no forced best match and no global one-to-one assignment.</p>
+        <ul>
+          <li>candidate_pairs.tsv contains the exact union entering XGBoost, with headers source1_entity_id and candidate_entity_ids.</li>
+          <li>matching_results.tsv contains only accepted candidates, with headers source1_entity_id and matched_entity_ids.</li>
+          <li>Both files use tabs, one row per Source 1 entity, unique comma-separated target IDs, and empty lists when appropriate. Every predicted ID must be present in its candidate list.</li>
+          <li>Submission validation checks complete test coverage, source prefixes, duplicate IDs, existing targets, and candidate containment. Packaging includes code, pinned dependencies, methodology, calibrated models, and cached base snapshots.</li>
+        </ul>
+      </section>
+      <section class="architecture-chapter" id="evaluation">
+        <h2>9. Evaluation and performance interpretation</h2>
+        <p>Evaluate held-out audit entities by macro F0.5: compute 1.25 × TP / (0.25 × true-link count + predicted-link count) for each non-singleton, then average across reference businesses.</p>
+        <ul>
+          <li>A singleton scores 1 only when its prediction is empty; any predicted match gives it 0. This makes false merges directly costly.</li>
+          <li>Reports include candidate pair recall, pair precision/recall, routing volume, candidate counts, country/missing-field/non-ASCII subgroups, and target-source results.</li>
+          <li>Stage runtime and peak process RSS are persisted with evaluation. Sampled training target-pool metrics are explicitly labelled and do not establish full-pool quality.</li>
+          <li>The challenge has approximately 24.2 million source records and 1.73 million Source 1 test queries. These describe dataset scale, not measured processing throughput or the website snapshot.</li>
+          <li>The website currently displays 100 synthetic reference records, 160 true links, and 20 singletons. Its labels and field comparisons are not trained-model predictions or accuracy measurements.</li>
+        </ul>
+      </section>
+      <section class="architecture-chapter" id="operations">
+        <h2>10. Storage, resumability, and execution</h2>
+        <p>A single CLI coordinates atomic stages: prepare, train-biencoder, embed, retrieve, features, train-xgboost, train-crossencoder, calibrate, predict, evaluate, validate, and all. A package command creates the submission archive.</p>
+        <ul>
+          <li>Default batching uses 100,000-row embedding shards, neural batches of 64, retrieval query batches of 16, and target batches of 20,000. Embeddings are float32 NPY memmaps with ID maps.</li>
+          <li>SQLite stage files hold records, pairs, feature vectors, calibration scores, and decisions. Feature extraction, sparse products, inference, and external-memory tree training avoid a complete pair-feature matrix in RAM.</li>
+          <li>A compressed index, its ID map, the TF-IDF vocabulary, a bounded sparse shard, and calibration arrays still consume memory. Sparse target-shard scanning trades bounded memory for runtime; server-scale benchmarking remains necessary.</li>
+          <li>Stage manifests record configuration/code/dependency fingerprints and output checksums. Atomic temporary-file replacement prevents incomplete outputs from becoming committed stages; intact embedding and lexical shards can be reused.</li>
+          <li>YAML settings and CLI overrides control paths, sampling, models, retrieval, batching, training, and outputs. Locked dependencies and Docker tooling support the separate GPU environment.</li>
+        </ul>
+      </section>
+      <section class="architecture-chapter" id="website">
+        <h2>11. Website architecture and continuous deployment</h2>
+        <p>EntityLens is a separate static presentation layer. A standard-library exporter converts labelled TSV records into a compact JSON snapshot consumed by HTML, modular CSS, and browser JavaScript.</p>
+        <ul>
+          <li>The exporter selects reference entities deterministically, preserves all their positives, and chooses up to four negatives per source from a bounded background pool of 2,000 records plus required positive targets.</li>
+          <li>Search, filters, source selection, pair inspection, connection graphs, and the architecture walkthrough run entirely in the browser. The inspector highlights text differences without producing model confidence.</li>
+          <li>Cloudflare Pages publishes website/dist/ from the connected GitHub repository. Pushes to the production branch main trigger deployment; local edits become live only after they are committed and pushed.</li>
+          <li>The static website requires no GPU, inference API, login, or database service. The JSON snapshot remains clearly identified as synthetic or training ground truth.</li>
+        </ul>
+      </section>
+    </div>
+    <footer><span><strong>EntityLens</strong> · Multilingual Business Entity Resolution</span><div><a href="index.html">Explore examples</a><a href="methodology.html">Methodology</a></div></footer>
+  </main>
+</body>
+</html>

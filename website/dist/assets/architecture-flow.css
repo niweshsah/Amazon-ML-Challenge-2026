@@ -1,0 +1,150 @@
+.flow-step {
+  display: flex;
+  gap: 14px;
+  border: 1px solid var(--line);
+  background: #f9fbff;
+  border-radius: 9px;
+  padding: 16px 18px;
+  margin: 14px 0;
+  align-items: center;
+}
+
+.flow-index {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  background: #e8eeff;
+  color: var(--blue);
+  font-size: .875rem;
+  font-weight: 700;
+  border-radius: 8px;
+}
+
+.flow-step strong {
+  font-size: 1rem;
+}
+
+.flow-step p {
+  color: var(--muted);
+  font-size: .875rem;
+  margin-top: 4px;
+}
+
+.flow-channels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 4px 22px;
+}
+
+.flow-channel {
+  border: 1px solid #c9d8ff;
+  background: var(--blue-wash);
+  padding: 18px;
+  border-radius: 9px;
+}
+
+.flow-channel h3 {
+  font-size: 1rem;
+  margin: 10px 0 6px;
+}
+
+.flow-channel p {
+  color: var(--muted);
+  font-size: .875rem;
+}
+
+.scoring-step {
+  background: #f1f5ff;
+  border-color: #c9d8ff;
+}
+
+.routing-branches {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr 1fr;
+  gap: 14px;
+  padding: 4px 22px;
+}
+
+.routing-branch {
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+}
+
+.routing-branch > span {
+  font-size: .75rem;
+  font-weight: 650;
+  letter-spacing: .04em;
+  display: block;
+  line-height: 1.7;
+}
+
+.routing-branch strong {
+  display: block;
+  font-size: 1rem;
+  margin-top: 10px;
+}
+
+.routing-branch p {
+  font-size: .875rem;
+  margin-top: 6px;
+}
+
+.routing-branch.reject {
+  color: var(--red);
+  background: var(--red-wash);
+  border-color: #eed0cc;
+}
+
+.routing-branch.review {
+  color: #7a5c13;
+  background: #fffae9;
+  border-color: #f0e0ad;
+}
+
+.routing-branch.accept {
+  color: var(--green);
+  background: var(--green-wash);
+  border-color: #c7e5d7;
+}
+
+.training-lane {
+  margin-top: 22px;
+  padding-top: 22px;
+  border-top: 1px dashed #cbd4e2;
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 18px;
+  align-items: center;
+}
+
+.training-lane p {
+  color: var(--muted);
+  font-size: .875rem;
+  margin-top: 5px;
+}
+
+.split-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.split-grid > span {
+  font-size: .75rem;
+  color: var(--muted);
+  text-align: center;
+  background: #f5f7fb;
+  border-radius: 7px;
+  padding: 12px 4px;
+}
+
+.split-grid strong {
+  display: block;
+  color: var(--ink);
+  font-size: 1.3rem;
+  margin-bottom: 5px;
+}

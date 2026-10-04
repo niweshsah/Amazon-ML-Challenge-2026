@@ -1,0 +1,135 @@
+{
+  "name": "EntityLens — Multilingual Business Entity Resolution",
+  "live_url": "https://entity-lens.pages.dev/",
+  "sections": [
+    {
+      "id": "inputs",
+      "title": "1. Inputs and matching contract",
+      "intro": "Source 1 is the reference source. Resolve each reference business independently against Sources 2 and 3 using entity_id, business_name, business_address, and country from tab-separated files.",
+      "points": [
+        "Training additionally reads train_ground_truth.tsv: one Source 1 ID and its complete comma-separated target match list, including empty lists for singletons.",
+        "Country remains an unrestricted string. Unicode names, unseen countries, missing addresses, and multiple matching target records are supported.",
+        "Test prediction includes every Source 1 entity and the complete Source 2/3 pools. Training sampling never limits test coverage."
+      ]
+    },
+    {
+      "id": "sampling",
+      "title": "2. Deterministic sampling and supervision isolation",
+      "intro": "The default training sample is 1.0 percent of Source 1, selected by seeded SHA-256 ranking with seed 42. The selected count is rounded upward; all selected true links and singleton groups are retained.",
+      "points": [
+        "Each training target pool contains every selected positive plus the configured percentage of remaining records from that source. Distractor sampling defaults to the Source 1 percentage and can be overridden independently.",
+        "Split complete Source 1 groups into 70% fitting, 10% development, 10% calibration, and 10% audit, with largest-remainder rounding for small samples.",
+        "All pairs for an entity remain together. Held-out positive targets are excluded from fitting supervision, including fitting negatives, but remain available to retrieval.",
+        "Development selects checkpoints; calibration fits score mappings and routing policy; the audit split provides the final held-out evaluation."
+      ]
+    },
+    {
+      "id": "preprocessing",
+      "title": "3. Unicode-safe representations",
+      "intro": "Store the original record alongside three text representations. Neural serialization preserves raw field values as Name, Address, and Country segments.",
+      "points": [
+        "Raw text feeds both neural models, preserving accented letters and Indic combining marks.",
+        "The normalized lexical view uses Unicode NFKC, case folding, whitespace cleanup, and punctuation handling while retaining Unicode letters, digits, and combining marks.",
+        "A separate Unidecode transliteration view supports lexical comparisons across writing systems. Original strings and entity IDs remain available for outputs and inspection.",
+        "Prepared records, source membership, row positions, split assignments, and training links are stored in disk-backed SQLite."
+      ]
+    },
+    {
+      "id": "encoders",
+      "title": "4. Neural models and supervised training",
+      "intro": "The bi-encoder embeds individual business records. The cross-encoder jointly scores a reference record and a target record only when the routing policy requires it.",
+      "points": [
+        "Bi-encoder: karmx/Llama-Karmx-Indic-Embedding-bge-m3, CLS pooling, L2-normalized vectors, and PEFT LoRA on query/value projections. Explicit positive and lexical hard-negative pairs use binary matching loss; the training logit is 20 × cosine similarity − 10.",
+        "Cross-encoder: BAAI/bge-reranker-v2-m3 with LoRA and a binary classification head. Supervision combines fitting positives with retrieval hard negatives ordered by dense and lexical similarity.",
+        "Neural training preserves fitting positives even when candidate retrieval misses them; this training-only preservation never inserts ground-truth targets into inference candidates.",
+        "Defaults: LoRA rank 16, alpha 32, dropout 0.05, up to five hard negatives per query, three epochs, AdamW learning rate 0.00002, batch size 64, and maximum token length 256.",
+        "Neural checkpoint selection uses development binary loss. CUDA inference/training uses BF16; gradient checkpointing reduces training memory.",
+        "Base-model revisions are pinned. Loading checks adapter base, tokenizer vocabulary, serialization, pooling, and maximum length. Incompatible or missing required assets fail explicitly."
+      ]
+    },
+    {
+      "id": "retrieval",
+      "title": "5. Independent retrieval and candidate union",
+      "intro": "Run dense and character-trigram TF-IDF searches independently against each target source, then union their results by the reference/target ID pair.",
+      "points": [
+        "Each channel initially retrieves Top-150 per target source: up to 600 candidates per reference business before overlaps and short or empty channels reduce that count.",
+        "Dense search uses normalized embeddings and inner product. Pools of at most 50,000 targets use exact FAISS IndexFlatIP; larger pools use IVF-PQ.",
+        "IVF-PQ defaults include at most 1,024 coarse lists, 32 PQ subquantizers adjusted to divide the embedding dimension, eight bits per subquantizer, nprobe 32, and up to 200,000 deterministically sampled index-training vectors.",
+        "TF-IDF uses character trigrams over the normalized and transliterated views, float32 weights, and a maximum vocabulary of 500,000 features. Sparse products process bounded query/target batches.",
+        "Each union member retains dense and lexical similarity, rank in each contributing channel, target source, and channel provenance. Missing channel ranks stay absent while both similarities are computed.",
+        "Ground truth is never consulted to inject inference candidates. Retrieval misses remain visible in candidate pair recall."
+      ]
+    },
+    {
+      "id": "features",
+      "title": "6. Pair features and XGBoost",
+      "intro": "Every candidate receives an explicit 22-feature vector: two retrieval similarities, six agreement/missingness features for each of three fields, and two address-number features.",
+      "points": [
+        "Per-field features: normalized equality, sequence similarity, token Jaccard, transliterated sequence similarity, left missingness, and right missingness for name, address, and country.",
+        "Address-number features: numeric token Jaccard and exact numeric-set agreement. Empty fields or empty number sets do not count as identity evidence.",
+        "Entity IDs, ground-truth labels, group assignments, sampling tags, and pool roles are excluded from the feature allowlist.",
+        "XGBoost fits retrieval pairs using binary logistic loss and external-memory quantile matrices. The current implementation uses CPU histogram training, up to 400 trees, depth 6, learning rate 0.05, and four threads.",
+        "Development log loss drives early stopping after 30 rounds without improvement; the selected best tree prefix is saved."
+      ]
+    },
+    {
+      "id": "calibration",
+      "title": "7. Score calibration and routing policy",
+      "intro": "Hash-rank the calibration entities into two disjoint halves. One fits independent isotonic mappings for XGBoost and cross-encoder scores; the other selects the complete-pipeline decision policy.",
+      "points": [
+        "Grid-search the lower XGBoost threshold, upper XGBoost threshold, and cross-encoder acceptance threshold by macro F0.5, accounting for retrieval misses and singleton outcomes.",
+        "The default grid has 15 evenly spaced probability values plus endpoints just outside zero and one. The lower threshold must be smaller than the upper threshold.",
+        "Threshold ties prefer higher global pair precision, then fewer routed pairs, then stable grid order.",
+        "Below the lower threshold: reject. Above the upper threshold: accept. Every intermediate score, including both boundaries, is routed to the cross-encoder.",
+        "Routed pairs are accepted when the calibrated cross-encoder score reaches its acceptance threshold. Missing cross-encoder assets stop routed inference; the policy never silently substitutes another decision rule.",
+        "Saved model content fingerprints bind the policy to its tree, adapters, and base-model assets. Calibration requires at least two entities and both positive and negative candidate labels."
+      ]
+    },
+    {
+      "id": "outputs",
+      "title": "8. Independent decisions and submission outputs",
+      "intro": "Make decisions independently for each candidate pair. There is no forced best match and no global one-to-one assignment.",
+      "points": [
+        "candidate_pairs.tsv contains the exact union entering XGBoost, with headers source1_entity_id and candidate_entity_ids.",
+        "matching_results.tsv contains only accepted candidates, with headers source1_entity_id and matched_entity_ids.",
+        "Both files use tabs, one row per Source 1 entity, unique comma-separated target IDs, and empty lists when appropriate. Every predicted ID must be present in its candidate list.",
+        "Submission validation checks complete test coverage, source prefixes, duplicate IDs, existing targets, and candidate containment. Packaging includes code, pinned dependencies, methodology, calibrated models, and cached base snapshots."
+      ]
+    },
+    {
+      "id": "evaluation",
+      "title": "9. Evaluation and performance interpretation",
+      "intro": "Evaluate held-out audit entities by macro F0.5: compute 1.25 × TP / (0.25 × true-link count + predicted-link count) for each non-singleton, then average across reference businesses.",
+      "points": [
+        "A singleton scores 1 only when its prediction is empty; any predicted match gives it 0. This makes false merges directly costly.",
+        "Reports include candidate pair recall, pair precision/recall, routing volume, candidate counts, country/missing-field/non-ASCII subgroups, and target-source results.",
+        "Stage runtime and peak process RSS are persisted with evaluation. Sampled training target-pool metrics are explicitly labelled and do not establish full-pool quality.",
+        "The challenge has approximately 24.2 million source records and 1.73 million Source 1 test queries. These describe dataset scale, not measured processing throughput or the website snapshot.",
+        "The website currently displays 100 synthetic reference records, 160 true links, and 20 singletons. Its labels and field comparisons are not trained-model predictions or accuracy measurements."
+      ]
+    },
+    {
+      "id": "operations",
+      "title": "10. Storage, resumability, and execution",
+      "intro": "A single CLI coordinates atomic stages: prepare, train-biencoder, embed, retrieve, features, train-xgboost, train-crossencoder, calibrate, predict, evaluate, validate, and all. A package command creates the submission archive.",
+      "points": [
+        "Default batching uses 100,000-row embedding shards, neural batches of 64, retrieval query batches of 16, and target batches of 20,000. Embeddings are float32 NPY memmaps with ID maps.",
+        "SQLite stage files hold records, pairs, feature vectors, calibration scores, and decisions. Feature extraction, sparse products, inference, and external-memory tree training avoid a complete pair-feature matrix in RAM.",
+        "A compressed index, its ID map, the TF-IDF vocabulary, a bounded sparse shard, and calibration arrays still consume memory. Sparse target-shard scanning trades bounded memory for runtime; server-scale benchmarking remains necessary.",
+        "Stage manifests record configuration/code/dependency fingerprints and output checksums. Atomic temporary-file replacement prevents incomplete outputs from becoming committed stages; intact embedding and lexical shards can be reused.",
+        "YAML settings and CLI overrides control paths, sampling, models, retrieval, batching, training, and outputs. Locked dependencies and Docker tooling support the separate GPU environment."
+      ]
+    },
+    {
+      "id": "website",
+      "title": "11. Website architecture and continuous deployment",
+      "intro": "EntityLens is a separate static presentation layer. A standard-library exporter converts labelled TSV records into a compact JSON snapshot consumed by HTML, modular CSS, and browser JavaScript.",
+      "points": [
+        "The exporter selects reference entities deterministically, preserves all their positives, and chooses up to four negatives per source from a bounded background pool of 2,000 records plus required positive targets.",
+        "Search, filters, source selection, pair inspection, connection graphs, and the architecture walkthrough run entirely in the browser. The inspector highlights text differences without producing model confidence.",
+        "Cloudflare Pages publishes website/dist/ from the connected GitHub repository. Pushes to the production branch main trigger deployment; local edits become live only after they are committed and pushed.",
+        "The static website requires no GPU, inference API, login, or database service. The JSON snapshot remains clearly identified as synthetic or training ground truth."
+      ]
+    }
+  ]
+}

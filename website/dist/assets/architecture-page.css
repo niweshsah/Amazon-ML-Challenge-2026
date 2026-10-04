@@ -1,0 +1,117 @@
+@import url("./architecture-flow.css");
+
+.architecture-page {
+  max-width: 1120px;
+}
+
+.architecture-intro {
+  color: var(--muted);
+  max-width: 780px;
+}
+
+.architecture-notice {
+  font-size: .875rem;
+  color: var(--muted);
+  border-left: 3px solid var(--blue);
+  padding: 12px 16px;
+  margin-top: 20px;
+  background: var(--blue-wash);
+  border-radius: 0 8px 8px 0;
+}
+
+.architecture-overview {
+  padding: 28px;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  margin: 28px 0;
+}
+
+.architecture-overview h2 {
+  margin: 9px 0 24px;
+}
+
+.architecture-contents {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+
+.architecture-contents a {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: white;
+  padding: 8px 11px;
+  font-size: .875rem;
+  line-height: 1.5;
+}
+
+.architecture-contents a:hover {
+  color: var(--blue);
+  border-color: #b8caff;
+}
+
+.architecture-chapter {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 25px 28px;
+  margin-bottom: 16px;
+}
+
+.architecture-chapter h2 {
+  margin-bottom: 12px;
+}
+
+.architecture-chapter p, .architecture-chapter li {
+  color: var(--muted);
+  line-height: 1.8;
+}
+
+.architecture-chapter ul {
+  padding-left: 22px;
+  margin: 16px 0 0;
+}
+
+.architecture-chapter li {
+  margin-top: 10px;
+  padding-left: 4px;
+}
+
+.architecture-chapter:target {
+  border-color: #b8caff;
+}
+
+@media (max-width: 720px) {
+  .architecture-overview {
+    padding: 18px 14px;
+  }
+
+  .flow-channels, .routing-branches {
+    grid-template-columns: 1fr;
+    padding: 0 8px;
+    gap: 9px;
+  }
+
+  .training-lane {
+    grid-template-columns: 1fr;
+  }
+
+  .architecture-chapter {
+    padding: 20px;
+  }
+
+  .architecture-contents {
+    gap: 6px;
+  }
+
+  .architecture-contents a {
+    padding: 7px 9px;
+  }
+
+  .flow-step {
+    padding: 14px 12px;
+  }
+
+}

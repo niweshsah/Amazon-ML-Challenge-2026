@@ -4,7 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="EntityLens methodology, ground-truth labels, example selection, and the entity-resolution architecture.">
-  <title>Methodology · EntityLens</title>
+  <title>Methodology · EntityLens — Multilingual Business Entity Resolution</title>
+  <link rel="canonical" href="https://entity-lens.pages.dev/methodology.html">
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <link rel="stylesheet" href="assets/base.css">
   <link rel="stylesheet" href="assets/details.css">
@@ -12,7 +13,7 @@
 <body>
   <header class="site-header">
     <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">e<span>l</span></span>EntityLens</a>
-    <nav aria-label="Main navigation"><a class="nav-link" href="index.html">Explorer</a><a class="nav-link active" href="methodology.html">Methodology</a></nav>
+    <nav aria-label="Main navigation"><a class="nav-link" href="index.html">Explorer</a><a class="nav-link" href="architecture.html">Architecture</a><a class="nav-link active" href="methodology.html">Methodology</a></nav>
   </header>
   <main class="page-shell methodology-page">
     <div class="eyebrow">PROJECT METHODOLOGY</div>
@@ -26,6 +27,7 @@
     <h2>Text agreement and ground truth</h2>
     <p>The pair inspector compares names, addresses, and country. Different words are highlighted. “Same normalized text” means the two fields agree after Unicode normalization, case folding, and whitespace handling. Missing fields are shown explicitly and do not establish a match. These descriptions are text comparisons, not confidence scores.</p>
     <h2>The project’s matching pipeline</h2>
+    <p><a href="architecture.html">Read the complete architecture</a> for the inference flow diagram, model defaults, training splits, calibration policy, output contract, storage, and deployment.</p>
     <p>The runnable Python pipeline preserves raw Unicode, builds lexical views, and generates candidates independently using a trained Indic BGE-M3 bi-encoder and character-trigram TF-IDF. It unions those candidates and derives field-level pair features. XGBoost handles confident decisions; uncertain pairs are routed to a supervised BGE multilingual cross-encoder.</p>
     <p>Training separates fitting, development, calibration, and audit groups. Calibrated thresholds optimize macro F0.5, including singletons. Predictions allow multiple matches and must remain within the generated candidate set. The architecture walkthrough explains this methodology; it is not a trace of a model run.</p>
     <h2>Scale and evaluation</h2>

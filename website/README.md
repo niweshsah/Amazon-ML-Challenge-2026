@@ -1,4 +1,6 @@
-# EntityLens
+# EntityLens — Multilingual Business Entity Resolution
+
+**[Open the live website](https://entity-lens.pages.dev/)** · [Complete architecture](../README.md#complete-architecture) · [Architecture page](https://entity-lens.pages.dev/architecture.html)
 
 A static, interactive ground-truth explorer for multilingual business entity resolution. No model or GPU runs in the website.
 
@@ -35,7 +37,27 @@ python3 website/scripts/export_examples.py --synthetic
 
 The exporter uses only the Python standard library. Query selection uses seeded hashes. Every selected positive is retained; background targets are bounded to 2,000 per source for inexpensive comparison selection. Include only data suitable for public display when publishing.
 
-## Free GitHub Pages deployment
+## Cloudflare Pages deployment and automatic updates
+
+The live site is https://entity-lens.pages.dev/. Cloudflare Pages is connected to the GitHub repository and publishes the static website after successful deployments of `main`.
+
+| Setting | Value |
+| --- | --- |
+| Production branch | `main` |
+| Framework preset | None |
+| Root directory | Repository root |
+| Build command | `exit 0` |
+| Build output directory | `website/dist` |
+
+Local changes appear online after committing and pushing them to the connected branch, then waiting for Cloudflare's deployment to finish. This static site does not require the Python pipeline or an inference server.
+
+## Architecture documentation
+
+The [root README](../README.md) contains the full architecture and inference flow diagram. The website's `architecture.html` presents the same content with a responsive flow diagram and links to each subsystem.
+
+Edit `website/docs/architecture.json` and run `python3 website/scripts/build_architecture_docs.py` to regenerate both documents together. This covers inputs, sampling, Unicode views, LoRA models, dense/lexical retrieval, 22 pair features, XGBoost, isotonic calibration, routing, TSV outputs, evaluation, resumability, and website deployment.
+
+## Alternative: GitHub Pages deployment
 
 GitHub Pages supports public repositories on GitHub Free. In your repository, choose **Settings → Pages → Build and deployment → Source → GitHub Actions**.
 
@@ -51,4 +73,4 @@ Reference: https://docs.github.com/en/pages/getting-started-with-github-pages/us
 
 ## Structure
 
-`dist/` contains the deployable pages, modular styles/scripts, favicon, and labelled JSON snapshot. `scripts/` contains the data exporter. Browser WebMCP navigation is optional and feature-detected; browsers without it retain every visible interaction. Its native browser integration was not checked because no supported context was available.
+`dist/` contains the deployable pages, modular styles/scripts, favicon, and labelled JSON snapshot. `scripts/` contains the data exporter and architecture documentation generator. `docs/` contains the shared architecture content source. Browser WebMCP navigation is optional and feature-detected; browsers without it retain every visible interaction. Its native browser integration was not checked because no supported context was available.
