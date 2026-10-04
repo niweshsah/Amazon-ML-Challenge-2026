@@ -1,41 +1,5 @@
-# Amazon-ML-Challenge-2026
+# Amazon ML Challenge 2026
 
-## Docker Environment
+The consolidated runnable implementation, configuration, environment tooling, tests, documentation, and preserved artifacts are in [final_pipeline](final_pipeline/README.md).
 
-Use the following steps to access the Docker environment.
-
-### 1. SSH into the Server
-
-Connect to the server while on IIT Wi-Fi:
-
-```bash
-ssh user@172.18.18.32
-```
-
-Enter the password provided to you.
-
-### 2. Go to the Workspace
-
-```bash
-cd ~/workspace/niwesh
-```
-
-### 3. Start/Enter the Docker Environment
-
-Run:
-
-```bash
-./ml-challenge/run_qwen.sh
-```
-
-This will start the Docker container and open a terminal inside it.
-
-If the container is already running, running `./run_qwen.sh` will open a new terminal connected to the existing container.
-
-## Installing Packages
-
-Do **not** install packages directly using `pip install`.
-
-Any changes made to the Docker environment are lost when the container is exited.
-
-If you need to install a new package or modify the environment, contact me.
+Start with the local fixture commands in that README. Challenge datasets and neural weights are supplied separately on the GPU server.

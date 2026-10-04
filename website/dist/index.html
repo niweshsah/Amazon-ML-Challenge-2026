@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#2457eb">
+  <meta name="description" content="Explore multilingual business entity resolution through labelled records, match comparisons, and an interactive architecture walkthrough.">
+  <title>EntityLens · Business entity resolution</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="assets/base.css">
+  <link rel="stylesheet" href="assets/workspace.css">
+  <link rel="stylesheet" href="assets/details.css">
+  <script type="module" src="assets/app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#explorer">Skip to explorer</a>
+  <header class="site-header">
+    <a class="brand" href="#" aria-label="EntityLens home"><span class="brand-mark" aria-hidden="true">e<span>l</span></span>EntityLens<span class="brand-label">ENTITY RESOLUTION</span></a>
+    <nav aria-label="Main navigation"><a class="nav-link active" href="#explorer">Explorer</a><a class="nav-link" href="#architecture">Architecture</a><a class="nav-link" href="#about">About</a></nav>
+    <a class="repository-link" href="https://github.com/niweshsah/Amazon-ML-Challenge-2026" target="_blank" rel="noopener noreferrer">View GitHub <span aria-hidden="true">↗</span></a>
+  </header>
+  <main class="page-shell">
+    <section class="intro" aria-labelledby="page-title">
+      <div><div class="eyebrow"><span class="eyebrow-line"></span> AMAZON ML CHALLENGE · PROJECT EXPLORER</div><h1 id="page-title">Different records. <span>One business.</span></h1><p>Explore how business identities connect across independent data sources.</p></div>
+      <div class="dataset-note"><span class="dataset-icon" aria-hidden="true">▤</span><div><strong id="dataset-title">Loading ground-truth examples</strong><span>Labelled examples · no model execution</span></div></div>
+    </section>
+    <section class="summary-grid" aria-label="Dataset summary" id="summary"><div class="stat-card"><span>Reference businesses</span><strong>—</strong></div><div class="stat-card"><span>True connections</span><strong>—</strong></div><div class="stat-card"><span>Businesses with no matches</span><strong>—</strong></div><div class="stat-card"><span>Countries represented</span><strong>—</strong></div></section>
+    <section class="explorer-section" id="explorer" aria-labelledby="explorer-title">
+      <div class="section-heading"><div><h2 id="explorer-title">Explore the connections</h2><p>Select a business. Inspect its matches and the records that look similar.</p></div><span class="subtle-tag">GROUND TRUTH EXPLORER</span></div>
+      <div class="workspace">
+        <aside class="business-browser" aria-label="Reference business selection">
+          <div class="browser-heading"><h3>Source 1</h3><span class="count-tag" id="reference-count">— records</span></div>
+          <label class="search-field"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Search businesses or IDs" aria-label="Search reference businesses" autocomplete="off"></label>
+          <div class="filter-row" id="filters" aria-label="Business filters"><button class="filter-button selected" data-filter="all" aria-pressed="true">All records</button><button class="filter-button" data-filter="matched" aria-pressed="false">Has matches</button><button class="filter-button" data-filter="singleton" aria-pressed="false">No matches</button><button class="filter-button" data-filter="missing" aria-pressed="false">Missing address</button><button class="filter-button" data-filter="multilingual" aria-pressed="false">Multilingual</button></div>
+          <div class="list-caption"><span>REFERENCE ENTITIES</span><span id="visible-count">—</span></div>
+          <div id="business-list" class="business-list" aria-label="Reference businesses"><p class="empty-state" role="status">Loading records…</p></div>
+          <div class="browser-footer"><span class="source-dot"></span> Source 1 is the reference source</div>
+        </aside>
+        <div class="workspace-main">
+          <div id="selected-record" class="selected-record"><p class="empty-state">Select a business to begin.</p></div>
+          <div class="view-toolbar"><div class="segmented-control" role="tablist" aria-label="Results view"><button id="comparisons-tab" class="selected" role="tab" aria-selected="true" aria-controls="comparisons-view" data-view="comparisons">Record comparisons</button><button id="graph-tab" role="tab" aria-selected="false" tabindex="-1" aria-controls="graph-view" data-view="graph">Connection graph</button></div><span class="ground-truth-caption"><span aria-hidden="true">✓</span> Ground-truth labels</span></div>
+          <div id="comparisons-view" role="tabpanel" aria-labelledby="comparisons-tab"><div class="comparison-controls"><div id="source-filters" class="source-filters"><button class="selected" data-source="all" aria-pressed="true">Both sources</button><button data-source="2" aria-pressed="false">Source 2</button><button data-source="3" aria-pressed="false">Source 3</button></div><span id="comparison-count" class="comparison-count"></span></div><div id="comparison-list" class="comparison-list"></div><div class="comparison-footnote">Negative examples are selected for similar names. Their labels come from the provided ground truth.</div></div>
+          <div id="graph-view" role="tabpanel" aria-labelledby="graph-tab" hidden><div class="graph-toolbar"><span>One identity can link to several records.</span><label class="checkbox-label"><input id="show-negatives" type="checkbox" checked> Show negative examples</label></div><div id="connection-graph" class="connection-graph"></div><div class="graph-legend"><span><i class="legend-line positive"></i>True match</span><span><i class="legend-line negative"></i>Negative example</span><span>Click a record to inspect it</span></div></div>
+        </div>
+      </div>
+    </section>
+    <section class="architecture-section" id="architecture" aria-labelledby="architecture-title"><div class="section-heading"><div><div class="eyebrow">BEHIND THE PROJECT</div><h2 id="architecture-title">From noisy text to resolved identities.</h2><p>Two retrieval channels find candidates. A matching cascade makes independent pair decisions.</p></div><span class="subtle-tag">METHODOLOGY · NOT A LIVE RUN</span></div><div class="pipeline-stages" id="pipeline-stages" aria-label="Pipeline stages"></div><div class="stage-detail" id="stage-detail" aria-live="polite"></div></section>
+    <section class="about-section" id="about" aria-labelledby="about-title"><div><div class="eyebrow">THE ENGINEERING CHALLENGE</div><h2 id="about-title">Matching beyond exact strings.</h2><p>Business names, addresses, and scripts vary between sources. The project combines semantic retrieval, lexical search, and supervised matching while preserving Unicode and allowing multiple matches—or none.</p></div><div class="about-facts"><div><strong>24.2M</strong><span>Source records in the challenge dataset</span></div><div><strong>1.73M</strong><span>Source 1 test queries in the challenge</span></div><p>Challenge scale, separate from the example dataset shown here.</p></div></section>
+    <footer><span><strong>EntityLens</strong> · Multilingual Business Entity Resolution</span><div><a href="methodology.html">Methodology</a><a href="https://github.com/niweshsah/Amazon-ML-Challenge-2026" target="_blank" rel="noopener noreferrer">Source code</a></div></footer>
+  </main>
+  <dialog id="comparison-dialog" aria-labelledby="dialog-title"><div class="dialog-header"><div class="eyebrow">PAIR INSPECTOR</div><button id="close-dialog" class="icon-button" aria-label="Close comparison">×</button></div><div id="dialog-content"></div></dialog>
+</body>
+</html>

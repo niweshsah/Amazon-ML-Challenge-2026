@@ -1,0 +1,947 @@
+[
+  {
+    "original": "ml-challenge/2202.12521v5.pdf",
+    "sha256": "dd5b8bb80a53e9c4a165d48ab9af12db1084bfda52c15c3bce84b5728a21335d",
+    "bytes": 4553865,
+    "destination": "final_pipeline/docs/2202.12521v5.pdf",
+    "disposition": "preserved"
+  },
+  {
+    "original": "ml-challenge/AGENTS.md",
+    "sha256": "213a95faef40185c01458f932e6ffb35013b88651e18de685d2529c33a97852c",
+    "bytes": 3142,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/CODEX_EMBEDDING_BASELINE_PLAN.md",
+    "sha256": "8b86570feddbafe4321326eb05a996d3515ca7998badd07151afd87bbe65f874",
+    "bytes": 21753,
+    "destination": "final_pipeline/docs/evidence/CODEX_EMBEDDING_BASELINE_PLAN.md",
+    "disposition": "preserved"
+  },
+  {
+    "original": "ml-challenge/Dockerfile.perf",
+    "sha256": "73415f0ccdcac3e7f4dc26cd06e19ae89459dbaa0e3207da307ebb847610f377",
+    "bytes": 323,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/Dockerfile.qwen",
+    "sha256": "01d36117d922f15dc2077efac666aa135ac976a020af135192c670f18afa35af",
+    "bytes": 962,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/GPU_ENTITY_RESOLUTION_PIPELINE_PLAN.md",
+    "sha256": "1d4a9d73b4cd06c9d776b5fa7c47fe30892f024d974855bdbd9b0ea9d99d02b1",
+    "bytes": 29878,
+    "destination": "final_pipeline/docs/evidence/GPU_ENTITY_RESOLUTION_PIPELINE_PLAN.md",
+    "disposition": "preserved"
+  },
+  {
+    "original": "ml-challenge/PS.pdf",
+    "sha256": "084168f9af69d3f8e7f1bf9d86f917bd2c736bc30278469cfb1916a217350dc4",
+    "bytes": 173220,
+    "destination": "final_pipeline/docs/PS.pdf",
+    "disposition": "preserved"
+  },
+  {
+    "original": "ml-challenge/basic_python_scripts/niwesh_dataset_codes/analysis_output/make_ps_report_charts.py",
+    "sha256": "44b4a8c528999fb1f1be93436e50476f0b99c8c1f02ffd3f0032c8434dca0ba0",
+    "bytes": 6764,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/basic_python_scripts/niwesh_dataset_codes/analysis_output/problem_statement_action_report.md",
+    "sha256": "994150afa9b0586a038f0904dd51500d687c7d915cd6988d1f1253b38f11808b",
+    "bytes": 15452,
+    "destination": "final_pipeline/docs/evidence/basic_python_scripts/niwesh_dataset_codes/analysis_output/problem_statement_action_report.md",
+    "disposition": "preserved"
+  },
+  {
+    "original": "ml-challenge/basic_python_scripts/niwesh_dataset_codes/analysis_output/report.md",
+    "sha256": "df1e71d8d3f27af70207e3358918b5de73a31cbb8ce4cfdf3785f522477fb26e",
+    "bytes": 5943,
+    "destination": "final_pipeline/docs/evidence/basic_python_scripts/niwesh_dataset_codes/analysis_output/report.md",
+    "disposition": "preserved"
+  },
+  {
+    "original": "ml-challenge/basic_python_scripts/niwesh_dataset_codes/dataset_process.py",
+    "sha256": "a4ab2ae7bc45f251445f06d4640dd2d7b0328f34bc48fab715a6a6fcb8f9716b",
+    "bytes": 114017,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/basic_python_scripts/qlora_train.py",
+    "sha256": "fa6ee2dd7f17a497b40d92e5df250cb40051cbf3325bf35b089bea55c1488d07",
+    "bytes": 19729,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/basic_python_scripts/quantised_model_load.py",
+    "sha256": "986a1b7b7dcb085d2a32e134d07f240117da9a0a884a884e36804bfe6119c739",
+    "bytes": 973,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/basic_python_scripts/test_lora.py",
+    "sha256": "42808f40ad8248af82ba223b166fa5625e817aca47e02508b832cccd5b94a68a",
+    "bytes": 3921,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/basic_python_scripts/train_lora.py",
+    "sha256": "e8e0779bddbf96339dbb97c00b9fbbc001cd75b36ea80b108bdd4bec6cb0013a",
+    "bytes": 12095,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/basic_python_scripts/train_lora_liger_kernel.py",
+    "sha256": "d2d08beb5fb655873ea7910c6384096f1191d938c0cb0e72f239e3760c6e1d8b",
+    "bytes": 10614,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/build_perf.sh",
+    "sha256": "7d94f93adf6a737f4922182fcfef879abeb486be8c05623bbf39a2c608396832",
+    "bytes": 893,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/build_qwen.sh",
+    "sha256": "370d4a37b50dba57269f39938e110716a64662b6dea969ec51be0a6b69d7d079",
+    "bytes": 2009,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/business_entity_resolution/artifacts/gbdt/tfidf_vectorizers.joblib",
+    "sha256": "cc3f59eacaef4487c7e0dbfbd01765e1ad8dcbee003fb05fd2251809ca33b27d",
+    "bytes": 2073391,
+    "destination": "final_pipeline/artifacts/legacy/business_entity_resolution/artifacts/gbdt/tfidf_vectorizers.joblib",
+    "disposition": "preserved"
+  },
+  {
+    "original": "ml-challenge/business_entity_resolution/run_blocking.py",
+    "sha256": "afc6008b918855afa0cc49b4ef8b102751a78db0012cbb65439a047752dc219f",
+    "bytes": 2882,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/business_entity_resolution/run_pipeline.py",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/business_entity_resolution/src/blocking/base.py",
+    "sha256": "09be594b00b6da15e73937a1f4596a6ba9d0eacc5ea579f552a4b11d61b437cc",
+    "bytes": 461,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/business_entity_resolution/src/blocking/tfidf_blocker.py",
+    "sha256": "69ea1164bdd7f522733fb1c438842a810288150e313b2e4a8a5fa6ec31b11e79",
+    "bytes": 5081,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/business_entity_resolution/src/config.py",
+    "sha256": "fa4a7dbeb028f9dc0ad6d8bdc930953d09abcd3df3062730f703a731936357bb",
+    "bytes": 884,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/business_entity_resolution/src/preprocessing/cleaner.py",
+    "sha256": "13e5278860bacb1efa6732979c9774aeeeddd428bc24b3c3c4e0b85f223c7fd0",
+    "bytes": 1017,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/business_entity_resolution/src/utils/__init__.py",
+    "sha256": "6b99cbcf5d5510e9a8f261803f74392b86b9cc6c75095e7899e3ac5ed4622edd",
+    "bytes": 51,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/business_entity_resolution/src/utils/metrics.py",
+    "sha256": "7a98e940bfceee0962606b619409ae3896d7dc67ab0cef35071e4112ced2788a",
+    "bytes": 4942,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/business_entity_resolution/train_gbdt.py",
+    "sha256": "9da4594ede7fbd32cc9c6d1ac67dc19e3ae7b6d492c096b1af9a649719412028",
+    "bytes": 52261,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/dataset-explore/visualize_data.py",
+    "sha256": "d7412647c86650e65fb6a9378db9f7991b2136b0af4834a15a5271f703354a40",
+    "bytes": 5749,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/entity_matching_100k/README.md",
+    "sha256": "d45e2be0943b6c0f11876c381c934bd45eae6796f3bd627aba6cc80a0c03cbd6",
+    "bytes": 6273,
+    "destination": "final_pipeline/docs/evidence/entity_matching_100k/README.md",
+    "disposition": "preserved"
+  },
+  {
+    "original": "ml-challenge/entity_matching_100k/SCHEMA.md",
+    "sha256": "f5b33d4ae380b3b06233db99f58bb61a0f0311d6fa653facf0f0a700bc0d9cbb",
+    "bytes": 4515,
+    "destination": "final_pipeline/docs/evidence/entity_matching_100k/SCHEMA.md",
+    "disposition": "preserved"
+  },
+  {
+    "original": "ml-challenge/entity_matching_100k/build_dataset.py",
+    "sha256": "76096d44a7b3e749968e5b20483054e61933bd69dcd2c777ab348560fdd66866",
+    "bytes": 19096,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/entity_matching_100k/run_job.py",
+    "sha256": "9fe6529d3be8e988bf65fb2ade5d526aafa1a433d14d7f3950a02ebbd1863c93",
+    "bytes": 1634,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/entity_matching_100k/start_background.sh",
+    "sha256": "88a4ca17e35872e60ddb28131c72f7d01dceddab5c5a6a652659375e086cf33d",
+    "bytes": 771,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/entity_matching_100k/validate_dataset.py",
+    "sha256": "0a39d313694aa6cc5b865d3ffb781f745f5cba99ae86c04a4911d8149e6fbc0e",
+    "bytes": 8069,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/entity_matching_gpu_tree/.gitignore",
+    "sha256": "51c91ef3167129c06f8136c90379166622261cac922b5d8f4e5f2ea5e80759ed",
+    "bytes": 30,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/entity_matching_gpu_tree/README.md",
+    "sha256": "16a1d683d26d8dbf4ebffff7ef308963e4538e2ecafb74605274272bc5030623",
+    "bytes": 5478,
+    "destination": "final_pipeline/docs/evidence/entity_matching_gpu_tree/README.md",
+    "disposition": "preserved"
+  },
+  {
+    "original": "ml-challenge/entity_matching_gpu_tree/config.py",
+    "sha256": "4ae0ad8078a1247b47eb16453cd098f014fb0926148c3b4e97d52d4644afb6f1",
+    "bytes": 985,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/entity_matching_gpu_tree/diagnostics.py",
+    "sha256": "140ba7fcad76ead037957b0b8f53aa3211a5a412922899e26fb4e2432d3056f4",
+    "bytes": 8279,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/entity_matching_gpu_tree/main.py",
+    "sha256": "315d3c2ab337e68ea9d16b5ca968350def7683cf25943282c2444dee935e6d0f",
+    "bytes": 4058,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/entity_matching_gpu_tree/prepare.py",
+    "sha256": "25680d6af0f7b527b3252dd4c4708ad20e39c547f8e0458de727427428ebb9ad",
+    "bytes": 13064,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/entity_matching_gpu_tree/test_core.py",
+    "sha256": "d5c028adf1aaa3630f43349c7873299bf9883339484164cdf25a228b14f5bd37",
+    "bytes": 1826,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/entity_matching_gpu_tree/text_features.py",
+    "sha256": "b4bee1cfef4d890a83fb5f0c129883dc3a3468e8f3a6351365ae06ed274b9f84",
+    "bytes": 10082,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/entity_matching_gpu_tree/train.py",
+    "sha256": "9f82fbaef2a391b27fcd280315c8ea5e66eb464be5a85a07a7c4ebdcc1f50880",
+    "bytes": 11022,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/EM/6_bge_m3_faiss_search.py",
+    "sha256": "768486986f9abfbb794b2bea656b0fb65aa9e2ecadcbfb94c907ac7ad436347d",
+    "bytes": 15361,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/EM/README.md",
+    "sha256": "ebbc2579dbf5b12f192ced84b5d78f1559199bb1c2064fd18748796cf459488f",
+    "bytes": 4326,
+    "destination": "final_pipeline/docs/evidence/praj_files/EM/README.md",
+    "disposition": "preserved"
+  },
+  {
+    "original": "ml-challenge/praj_files/EM/benchmark_first_million.py",
+    "sha256": "5793391e3a924f8c8d15b20836c05648595da0de89e8187a51d63b810946b3b3",
+    "bytes": 9114,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/EM/faiss_retention_calc.py",
+    "sha256": "9e83310d4dc82a9ca8af3dd1efc83f7db5954678b8d763fee4a357b3c426058d",
+    "bytes": 8759,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/EM/merge_candidate_generators.py",
+    "sha256": "56522acfe6c040a25ebffd682c60a20f24dcc9b4096e9c4c4e94eaca0bae6ddb",
+    "bytes": 3721,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/EM/multilingual_candidate_probe.py",
+    "sha256": "b198d012811d03fdfffc875b6c1ce5cdf9e91a866db0ad3e451d40e36541e9a7",
+    "bytes": 9536,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/EM/paper_blocking_probe.py",
+    "sha256": "fdea2046ac22f73d359f90eea1ee083a2edeb91602b688fe8a0748a02f0ad971",
+    "bytes": 9154,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/EM/reports/multilingual_probe_5000.md",
+    "sha256": "4fdc6792b7530274cd16b9fe78ddbc7d34fc576be39bbc313c37c169cd58f9cf",
+    "bytes": 3233,
+    "destination": "final_pipeline/docs/evidence/praj_files/EM/reports/multilingual_probe_5000.md",
+    "disposition": "preserved"
+  },
+  {
+    "original": "ml-challenge/praj_files/EM/reports/paper_blocking_probe.md",
+    "sha256": "9d9d6655d0ef5194128029567e43aab79525b7fd265d1552d309000064021292",
+    "bytes": 2537,
+    "destination": "final_pipeline/docs/evidence/praj_files/EM/reports/paper_blocking_probe.md",
+    "disposition": "preserved"
+  },
+  {
+    "original": "ml-challenge/praj_files/EM/reverse_address_probe.py",
+    "sha256": "98927d67a7c6a7c80622e5a72472bfcef576d2401130ace724318849b7fe19b3",
+    "bytes": 7325,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/EM/script_aware_fusion.py",
+    "sha256": "f770353975274d734a7cbab131b92487f98dd9d5bb0cefc186bed2ed006408a8",
+    "bytes": 5438,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/dense_encoder_v2/.gitignore",
+    "sha256": "553d888952a23e007d8de3f17e3a76af89c1cd62525beb7d8527ecb5b2bdc867",
+    "bytes": 24,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/dense_encoder_v2/README.md",
+    "sha256": "a347dfbd6f84906dceaa8265c16103f7bb4e7829f60af865454844d40a20cd04",
+    "bytes": 3786,
+    "destination": "final_pipeline/docs/evidence/praj_files/dense_encoder_v2/README.md",
+    "disposition": "preserved"
+  },
+  {
+    "original": "ml-challenge/praj_files/dense_encoder_v2/core.py",
+    "sha256": "cd7c8cff50f0552f2ea78d66ffa88ae570e351ff542c73b46f83f9c1c3da1173",
+    "bytes": 5565,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/dense_encoder_v2/encoder.py",
+    "sha256": "434b610035f63178e57548c0bc5237f439b4fdbcd7b76fc6130807d633d23b33",
+    "bytes": 3090,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/dense_encoder_v2/evaluate.py",
+    "sha256": "59d317a30f4d657c7fc6d7eb9f5d7a745d495467fac7bcd92a40b3d84b672d11",
+    "bytes": 8490,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/dense_encoder_v2/pipeline.py",
+    "sha256": "74398acdac0e1db46db049e2a9b2c995534b5e5a2ad9c5837d7f04fe5bca44a3",
+    "bytes": 5417,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/dense_encoder_v2/plot_recall_at_k.py",
+    "sha256": "6df2a6efb68b939a2a45dc8b47cb41bd5f8b9a939d809d4dd78429d6a5d77a7c",
+    "bytes": 5998,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/dense_encoder_v2/plot_run.py",
+    "sha256": "238e4af92f3e803425e26f059e5e6e18ef953d220b25923fba88fb8c04c66dc6",
+    "bytes": 16705,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/dense_encoder_v2/prepare.py",
+    "sha256": "f9d4eb1330595cd206d48f3f091e50a2ee824d46aaf96c11c915fa9a11cf5801",
+    "bytes": 11870,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/dense_encoder_v2/recall_at_k.py",
+    "sha256": "9b93af2ccbf886d7356f86e3c862ed02a8f23f614748d7384b10f4d85da48384",
+    "bytes": 12222,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/dense_encoder_v2/run_all.sh",
+    "sha256": "f52e99a2038c771022fbb596b80fd662d93bcf5afd2bc48ac1164415c2673197",
+    "bytes": 783,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/dense_encoder_v2/test_pipeline.py",
+    "sha256": "d7cbbb631b584759e14eccdb5cd38553af7718b404702934a1855445b946df21",
+    "bytes": 7981,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/dense_encoder_v2/train.py",
+    "sha256": "7bdebeae58aa43b272730d9f4d120a2bb87761c448a06e1162fa757a4f41cb02",
+    "bytes": 9063,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/embedding_baseline/README.md",
+    "sha256": "41066c575844e376e567115feecb7afbf3ced6fdd30ada07c914a79b05022d43",
+    "bytes": 6510,
+    "destination": "final_pipeline/docs/evidence/praj_files/embedding_baseline/README.md",
+    "disposition": "preserved"
+  },
+  {
+    "original": "ml-challenge/praj_files/embedding_baseline/configs/default.yaml",
+    "sha256": "082b9fbfe3936946f86d0f57a5a24c24340ec1985ceb096918e612518f5cb103",
+    "bytes": 885,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/embedding_baseline/reports/embedding_benchmark.md",
+    "sha256": "c78730da3ccef5128417d21d6bbb58c7b7a1d7b06683b4dec7d43364ac079af2",
+    "bytes": 459,
+    "destination": "final_pipeline/docs/evidence/praj_files/embedding_baseline/reports/embedding_benchmark.md",
+    "disposition": "preserved"
+  },
+  {
+    "original": "ml-challenge/praj_files/embedding_baseline/reports/train_retrieval_metrics.md",
+    "sha256": "1337788034c5284157f9e268452dc2242ca6a36aea982b295bca956602c3f2a1",
+    "bytes": 3213,
+    "destination": "final_pipeline/docs/evidence/praj_files/embedding_baseline/reports/train_retrieval_metrics.md",
+    "disposition": "preserved"
+  },
+  {
+    "original": "ml-challenge/praj_files/embedding_baseline/run.py",
+    "sha256": "153ddcd3548332375c05c90931237c0c0a91cf08abbb102a76a5ff6549b7d78b",
+    "bytes": 5821,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/embedding_baseline/scripts/run_test_retrieval.sh",
+    "sha256": "5b3afe06dcd287de8608d79b5d2c6b9e7083ef4f6e3c0f99e3785bc3fa09d135",
+    "bytes": 285,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/embedding_baseline/scripts/run_train_eval.sh",
+    "sha256": "121ff9f98f11f9f2e231f805a153ad5d4f5aa4e79c480b5a2bc586cb1655910e",
+    "bytes": 182,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/embedding_baseline/src/__init__.py",
+    "sha256": "dc5e909aa8d0fcd0d1c276fc7a92c5afc57d93c9abf073031af0b816acceb95c",
+    "bytes": 74,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/embedding_baseline/src/benchmark.py",
+    "sha256": "2a87e1cea88f1815a35ab74ff7b3f25cedacf905b23c3829a00f30b64fcfdde9",
+    "bytes": 6398,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/embedding_baseline/src/build_index.py",
+    "sha256": "5d5e34ef377fa15de52893c666da4608cb4d19e7341e593322cb01cd9c809c99",
+    "bytes": 3078,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/embedding_baseline/src/checkpoint.py",
+    "sha256": "a0689b8ed7f2413ebe8c11f442e5d5ac1998574aa8c629bf8a20931d0f78b384",
+    "bytes": 676,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/embedding_baseline/src/embed.py",
+    "sha256": "cf0d694333ffb2404c6f0ec6c4fc0ec9ab18e079a2aaf8ea16d2e532fd583fcb",
+    "bytes": 12643,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/embedding_baseline/src/evaluate.py",
+    "sha256": "60418358854c76e7bd53b7fe5130d9a08e453bd90e663b8a6aeb51e6014e537d",
+    "bytes": 8012,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/embedding_baseline/src/gpu_utils.py",
+    "sha256": "89d612b7da39b9f7c590b305e1835beb26d6b1839968b332ecb5fa126b784631",
+    "bytes": 2083,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/embedding_baseline/src/inspect_data.py",
+    "sha256": "08ebdcfd702970b406cd06d4e07197d7719701e44699abf53d2952e7b18df146",
+    "bytes": 2391,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/embedding_baseline/src/io_utils.py",
+    "sha256": "00016530a1d2fd3c8d2fd543149a6b48d3404f734cf72f259a30f04439687672",
+    "bytes": 4770,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/embedding_baseline/src/outputs.py",
+    "sha256": "020f2e597787746fc944ac161b67431aca952c96f62e739f7cd63caa11c76e8c",
+    "bytes": 3392,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/embedding_baseline/src/retrieve.py",
+    "sha256": "504c9005ed7d2e7b4fe2217265b8ade62b7a6bca552bf6c0428379eb17886200",
+    "bytes": 8308,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/embedding_baseline/src/smoke_test.py",
+    "sha256": "6d45f00f542e1c97d047849c90e9f89f55cef0fd1b4541b486ed665c930524aa",
+    "bytes": 4899,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/embedding_baseline/src/text_builder.py",
+    "sha256": "2257381ad75d9eb70512e25054f5c7bb6c79d9bcff07b8267941abcc383dd0d1",
+    "bytes": 1515,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/entity_encoder/EVALUATION_PROTOCOL.md",
+    "sha256": "ba9d9de30101ae6eb2e0f63c4af5b55dceb65361e02a2049bdde1d59e8d395f8",
+    "bytes": 3993,
+    "destination": "final_pipeline/docs/evidence/praj_files/entity_encoder/EVALUATION_PROTOCOL.md",
+    "disposition": "preserved"
+  },
+  {
+    "original": "ml-challenge/praj_files/entity_encoder/README.md",
+    "sha256": "f19c8653770ad37b2074a6fae74db1798214443de64ec383d2beb9e1cac37610",
+    "bytes": 5272,
+    "destination": "final_pipeline/docs/evidence/praj_files/entity_encoder/README.md",
+    "disposition": "preserved"
+  },
+  {
+    "original": "ml-challenge/praj_files/entity_encoder/artifacts/final_adapter/README.md",
+    "sha256": "3240d37c8d100acb8c36a06e5c47d28727f5c889ab1f8f746ca046fb9c769785",
+    "bytes": 5204,
+    "destination": "final_pipeline/artifacts/legacy/praj_files/entity_encoder/artifacts/final_adapter/README.md",
+    "disposition": "preserved"
+  },
+  {
+    "original": "ml-challenge/praj_files/entity_encoder/artifacts/latest_adapter/README.md",
+    "sha256": "3240d37c8d100acb8c36a06e5c47d28727f5c889ab1f8f746ca046fb9c769785",
+    "bytes": 5204,
+    "destination": "final_pipeline/artifacts/legacy/praj_files/entity_encoder/artifacts/latest_adapter/README.md",
+    "disposition": "preserved"
+  },
+  {
+    "original": "ml-challenge/praj_files/entity_encoder/artifacts/smoke_adapter/README.md",
+    "sha256": "3240d37c8d100acb8c36a06e5c47d28727f5c889ab1f8f746ca046fb9c769785",
+    "bytes": 5204,
+    "destination": "final_pipeline/artifacts/legacy/praj_files/entity_encoder/artifacts/smoke_adapter/README.md",
+    "disposition": "preserved"
+  },
+  {
+    "original": "ml-challenge/praj_files/entity_encoder/artifacts/smoke_log.jsonl",
+    "sha256": "f2294427b7013f3a705ab3e509b9f002e18fc7e09692b900185e9a1d23c8cf31",
+    "bytes": 97,
+    "destination": "final_pipeline/artifacts/legacy/praj_files/entity_encoder/artifacts/smoke_log.jsonl",
+    "disposition": "preserved"
+  },
+  {
+    "original": "ml-challenge/praj_files/entity_encoder/artifacts/training_log.jsonl",
+    "sha256": "ec9012b545284474b6205a8f9f05538825eb28c33c069b6d0203359cc38e0bf4",
+    "bytes": 4219,
+    "destination": "final_pipeline/artifacts/legacy/praj_files/entity_encoder/artifacts/training_log.jsonl",
+    "disposition": "preserved"
+  },
+  {
+    "original": "ml-challenge/praj_files/entity_encoder/common.py",
+    "sha256": "fc4171aafdf19a6f97fc3873868188ef605a568abccd65427b2b82489116045f",
+    "bytes": 1532,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/entity_encoder/embed_all.py",
+    "sha256": "f667ee4311bccf55ea60c8815fcd02ac900b55db7b2a472c2ea570e958934ae7",
+    "bytes": 5122,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/entity_encoder/evaluate_bge_100k.py",
+    "sha256": "6c505c92eed9eae988191a946b5b7168ca7ef325406cff06a694a5fc2525ac07",
+    "bytes": 7956,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/entity_encoder/evaluate_rerank.py",
+    "sha256": "72901b61301142e9012775e28f8de974c40364685d2b37c3ed8e013e30d97cc6",
+    "bytes": 8213,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/entity_encoder/export_encoder.py",
+    "sha256": "e94e0e10449d9e59bef466c1e9b575edf9f67b7c28dc5f575a2b0cd771fe36d9",
+    "bytes": 1272,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/entity_encoder/prepare.py",
+    "sha256": "9250e20dde13088d8d0126024080446b6e9753b55a21a84db9d29fb7d4ced19b",
+    "bytes": 9530,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/entity_encoder/train.py",
+    "sha256": "dd22f8319a10d593d114ad657ed64f2a6d7d33099b7fe3f4205b0eb1b960e7ba",
+    "bytes": 12688,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/general/check_env.py",
+    "sha256": "3aff7d93f5a99e9f790d14d8a4f6246d51b67ecb03e74353c69f797d7f8f8118",
+    "bytes": 2843,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/hybrid_entity_resolution/.gitignore",
+    "sha256": "f162171ded7ff8c1d6032f7cb50317bc19cc4d1bbd4757be9f8ea75cdec540f1",
+    "bytes": 11,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/hybrid_entity_resolution/README.md",
+    "sha256": "0135bba8a57e16f77009aa04619ce323c5e8a682b905c526d57700142b30ea41",
+    "bytes": 3904,
+    "destination": "final_pipeline/docs/evidence/praj_files/hybrid_entity_resolution/README.md",
+    "disposition": "preserved"
+  },
+  {
+    "original": "ml-challenge/praj_files/hybrid_entity_resolution/__init__.py",
+    "sha256": "9da855d45ad5d492d60346371494e7c97ed5c8fa8e463c34ae0cbd4be0022392",
+    "bytes": 329,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/hybrid_entity_resolution/compare_runs.py",
+    "sha256": "e9d1fb5430ab6bba8afbc1604c9733155ffaca4ca80b461b4200ec0ac0a1ab1a",
+    "bytes": 1703,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/hybrid_entity_resolution/features.py",
+    "sha256": "eddca634f725331d1826739dc90ba38d043a9058c14312396b31471b307e3ccc",
+    "bytes": 6644,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/hybrid_entity_resolution/metrics.py",
+    "sha256": "4fc06259432c3f3e345f1346ba9d2b408539e50cfa05ea2af7555889f70df52b",
+    "bytes": 3424,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/hybrid_entity_resolution/normalizer.py",
+    "sha256": "2416215ed85ad9e6e229eae92ec9a631ae93670143da8390bc6d13ca21b9a0ee",
+    "bytes": 10671,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/hybrid_entity_resolution/pipeline.py",
+    "sha256": "c85ba031b518222074e6deec5908e5e8a79778f83be284ca3ceba0a2041843db",
+    "bytes": 7886,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/hybrid_entity_resolution/reranker.py",
+    "sha256": "1c50bc92c9548e819c466ba4a7b16916392bae27317c03943f99dbea2e17435d",
+    "bytes": 6290,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/hybrid_entity_resolution/retrieval.py",
+    "sha256": "0f785ff5f651399204f593b4f0c070311a4d6730316403e44fb0ce8f0edf3402",
+    "bytes": 14996,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/hybrid_entity_resolution/setup_indicxlit_model.sh",
+    "sha256": "e96d2953d9a05b2d884c72722ed96b5b191c1d7d1fe3223f9ce1230477669e3d",
+    "bytes": 604,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/output/faiss_top100_language_mismatch_eda.md",
+    "sha256": "57e971819fa95a5d16d03f9ce12ac1914d581c3fb43beb61147d58374068f6e8",
+    "bytes": 2719,
+    "destination": "final_pipeline/docs/evidence/praj_files/output/faiss_top100_language_mismatch_eda.md",
+    "disposition": "preserved"
+  },
+  {
+    "original": "ml-challenge/praj_files/output/faiss_top100_missed_pair_eda.md",
+    "sha256": "25acae0cb6ef495f1b64ec2a593997afa72c34e05cd8a02f7dfb889c2ac8806b",
+    "bytes": 4319,
+    "destination": "final_pipeline/docs/evidence/praj_files/output/faiss_top100_missed_pair_eda.md",
+    "disposition": "preserved"
+  },
+  {
+    "original": "ml-challenge/praj_files/src/0_preprocess.py",
+    "sha256": "7db998bd67cc367e125723cc526469650c8ba58c97a80bb38111c9e3b86c9b11",
+    "bytes": 4821,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/src/0_preprocess_libpostal.py",
+    "sha256": "b432b44dbbdbcde5ddee230b89487e96e280dc5c2af01b9a883b61e6fdbdae9d",
+    "bytes": 11123,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/src/1_blocking_tfidf.py",
+    "sha256": "e154fac7f619ec3844f41c2ca91afe123021ff7ab2e58e062081e9d30502a3ed",
+    "bytes": 3377,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/src/blocking/1_build_tfidf.py",
+    "sha256": "45833ae487abd2f33059a6ea47dd05b647f5318ae433920ed7e889aa1232861a",
+    "bytes": 3758,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/src/blocking/2_knn_search.py",
+    "sha256": "f2d534f3b558622a59fc0b7e7757265ec7563bffeb28a973b96e25bd43412953",
+    "bytes": 7418,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/src/blocking/2_knn_search_gpu.py",
+    "sha256": "9174c0f4a7010802e9e391f71c23d83cc99c4671552e33691ae708b01e588559",
+    "bytes": 5107,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/src/blocking/3_build_cross_encoder_dataset.py",
+    "sha256": "d38e8453cb24743a740d6210841abf77038a678f6adb38fcffff4ae72efd97c7",
+    "bytes": 4338,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/src/blocking/4_build_dense_embeddings.py",
+    "sha256": "74d1a3ea1b336937c1801b4045c0a4db206b88a1ad0c6e56630a202db5567416",
+    "bytes": 2835,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/src/blocking/5_faiss_gpu_search.py",
+    "sha256": "25b565b18767eda4dcb38946199c16ed3b7c6752862c16d2ebbec45c409f876c",
+    "bytes": 14364,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/src/blocking/7_build_latin_views.py",
+    "sha256": "5e666f4d2f77b56e1b4fbc14a6d3e83ba43af82e720fcaec4a78813d21b36a68",
+    "bytes": 4751,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/src/blocking/evaluate_faiss_threshold.py",
+    "sha256": "6f32f2bd00e00a8256fdb03ee48acd3ed2971f2c7cb56cb9b63d10d630e4b47a",
+    "bytes": 5744,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/praj_files/src/blocking/multilingual_text.py",
+    "sha256": "841302d3c7add5fc5f91d455603baa7363daf00501bacc8acb0d18239055ed84",
+    "bytes": 3943,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/requirements.txt",
+    "sha256": "0f6fd711773240a370d6c0cd53e1929827854b358a8653a53c5f952c440c7f41",
+    "bytes": 324,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "ml-challenge/run_qwen.sh",
+    "sha256": "668d8a6546e167bc03237924e936902fcf13021138f3bf5db1e864d35b2b9aa6",
+    "bytes": 4324,
+    "destination": null,
+    "disposition": "superseded implementation"
+  },
+  {
+    "original": "run_issac.sh",
+    "sha256": "6d86269b940a118f29ecae94ddd79c42f4c0d31146e81feaa4259b06cad873b0",
+    "bytes": 1238,
+    "destination": null,
+    "disposition": "superseded tooling"
+  },
+  {
+    "original": "run_pytorch.sh",
+    "sha256": "bc0d374af168c01dcf9472c9f7557f1eb88afee465c7f14c2cd62f2d76370830",
+    "bytes": 6903,
+    "destination": null,
+    "disposition": "superseded tooling"
+  },
+  {
+    "original": "push.sh",
+    "sha256": "c3142a86877e5522ff2caa6ea7e4358a41bb52ef0dfcac344db0c29f8a971d7e",
+    "bytes": 863,
+    "destination": null,
+    "disposition": "superseded tooling"
+  },
+  {
+    "original": "README.md",
+    "sha256": "f0cb8cd36dae9e5d0b69e540eba410aa51c2066d04ed07bc76f4dbd117c747fa",
+    "bytes": 840,
+    "destination": null,
+    "disposition": "replaced project metadata"
+  },
+  {
+    "original": ".gitignore",
+    "sha256": "c2a1508f3e4926c2c35be076e3b5060500b03c84ae36dea6945d1e24d4898ef3",
+    "bytes": 518,
+    "destination": null,
+    "disposition": "replaced project metadata"
+  }
+]
